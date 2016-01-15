@@ -104,7 +104,7 @@ def stackparticles(partdat):
 	partarray = partarray[0]
 	return partarray
 
-def halo(partstack,fofdat,transform,groupnum, plot=True):
+def halo(partstack,fofdat,groupnum, plot=True):
 	""" define a central halo using groupnum and see its jz/jc histogram and morphology """
 	stack = partstack[(partstack[:,1] == groupnum) & (partstack[:,2] == 0)]
 	fofindex = np.where(fofdat[1] == groupnum)
@@ -124,34 +124,56 @@ def halo(partstack,fofdat,transform,groupnum, plot=True):
 	pos = pos[radsort]
 	cum_mass = np.cumsum(stack[:,9])
 	starinnermass = cum_mass[stack[:,0] == 4]
+	starmass = stack[:,9][stack[:,0] == 4]
 	starpos = pos[stack[:,0] == 4]
+	print str(starpos[0])
 	starradii = np.linalg.norm(starpos, axis = 1)
 	radmask = starradii < 0.15*r200
 	starvel = stack[:,6:9][stack[:,0] == 4]-subhalovel
-	starj = np.array([np.cross(starv,starp) for starv,starp in zip(starvel,starpos)])
+	massvel = np.array([starvel[i]*starmass[i] for i in range(0,len(starvel))])
+	starj = np.array([np.cross(starp,starv) for starp,starv in zip(starpos,massvel)])
 	r200j = starj[radmask]
+	print str(starvel[0])
 	tot_ang_mom = np.sum(r200j, axis = 1)
-	yaw = np.arccos(tot_ang_mom[1]/(np.sqrt(tot_ang_mom[0]**2+tot_ang_mom[1]**2)))
-	pitch = np.arccos(tot_ang_mom[1]/(np.sqrt(tot_ang_mom[1]**2+tot_ang_mom[2]**2)))
-	roll = np.arccos(tot_ang_mom[0]/(np.sqrt(tot_ang_mom[0]**2+tot_ang_mom[2]**2)))
-	cos = np.cos
-	sin = np.sin
-	yaw_tran = np.matrix([[cos(yaw), -sin(yaw), 0],[sin(yaw), cos(yaw), 0],[0,0,1]])
-	pitch_tran = np.matrix([[cos(pitch), 0, sin(pitch)],[0,1,0],[-sin(pitch), 0, cos(pitch)]])
-	roll_tran = np.matrix([[1,0,0],[0,cos(roll),-sin(roll)],[0,sin(roll),cos(roll)]])
-	transform = np.matmul(np.matmul(roll_tran,pitch_tran),yaw_tran)
-	print str(np.shape(transform))
-	starpos = np.array([np.matmul(starpos[i],transform) for i in range(0,len(starpos))])[:,0]
-	print str(starpos)
-	starvel = np.array([np.matmul(starvel[i],transform) for i in range(0,len(starvel))])[:,0]
-	starr_xy = np.linalg.norm(np.dstack((starpos[:,0],starpos[:,2]))[0], axis = 1)
-	G = 4.302e4
+	a = np.matrix([tot_ang_mom[0],tot_ang_mom[1],tot_ang_mom[2]])/np.linalg.norm([tot_ang_mom[0],tot_ang_mom[1],tot_ang_mom[2]])
+	b = np.matrix([0,0,1])
+	v = np.cross(a,b)
+	s = np.linalg.norm(v)
+	c = np.dot(a,b.T)
+	vx = np.matrix([[0,-v[0,2],v[0,1]],[v[0,2],0,-v[0,0]],[-v[0,1],v[0,0],0]])
+	transform = np.eye(3,3) + vx + (vx*vx)*((1-c[0,0])/s**2)
+	#b = np.matrix([0,1,0])
+	#v = np.cross(a,b)
+	#s = np.linalg.norm(v)
+	#c = np.dot(a,b.T)
+	#vx = np.matrix([[0,-v[0,2],v[0,1]],[v[0,2],0,-v[0,0]],[-v[0,1],v[0,0],0]])
+	#transformvel = np.eye(3,3) + vx + (vx*vx)*((1-c[0,0])/s**2)
+	#transform = np.linalg.inv(transform)	
+	#print str(np.matmul(transform,a.T))
+	starpos = np.array([np.matmul(transform,starpos[i].T) for i in range(0,len(starpos))])[:,0]
+	starvel = np.array([np.matmul(transform,starvel[i].T) for i in range(0,len(starvel))])[:,0]
+	starpos = np.dstack([starpos[:,2],starpos[:,1],starpos[:,0]])[0]
+	starvel = np.dstack([-starvel[:,2],-starvel[:,1],starvel[:,0]])[0]
+	print str(starpos[0])
+	print str(starvel[0])
+	starr_xy = np.linalg.norm(np.dstack((starpos[:,0],starpos[:,1]))[0], axis = 1)
+	G = 4.302e2
 	starv_c = np.sqrt((G*starinnermass)/starr_xy)
-	starj = np.array([np.cross(starv,starp) for starv,starp in zip(starvel,starpos)])
-	starj_z = starj[:,1]
+	massvel = np.array([starvel[i]*starmass[i] for i in range(0,len(starvel))])
+	starj = np.array([np.cross(starp,starv) for starp,starv in zip(starpos,massvel)])
+	starjspec = np.array([np.cross(starp,starv) for starp,starv in zip(starpos,starvel)])
+	starradii = np.linalg.norm(starpos, axis = 1)
+	radmask = starradii < 0.15*r200 
+	r200j = starj[radmask]
+	print str(r200j)
+	tot_ang_mom = np.sum([r200j[:,0],r200j[:,1],r200j[:,2]], axis =1)
+	tot_ang_mom = tot_ang_mom/np.linalg.norm(tot_ang_mom)
+	print str(tot_ang_mom)
+	print str(np.linalg.norm(tot_ang_mom))
+	starj_z = starjspec[:,2]
 	starj_c = starv_c*starr_xy
-	starjz_jc = (starj_z/starj_c)*10
-	print str(starjz_jc)
+	starjz_jc = (starj_z/starj_c)
+	
 	
 	starmass = stack[:,9][stack[:,0] == 4]
 	if plot == True:
@@ -180,8 +202,8 @@ def halo(partstack,fofdat,transform,groupnum, plot=True):
 	
 	if plot == True:
 		x = starpos[:,0]
-		y = starpos[:,2]
-		z = starpos[:,1]
+		y = starpos[:,1]
+		z = starpos[:,2]
 		params = {'axes.labelsize': 14, 'xtick.labelsize': 10, 'ytick.labelsize': 10, 'text.usetex': True, 'lines.linewidth' : 2}
 		plt.rcParams.update(params)
 		from mpl_toolkits.mplot3d import Axes3D
@@ -189,24 +211,25 @@ def halo(partstack,fofdat,transform,groupnum, plot=True):
 		my_cmap = matplotlib.cm.get_cmap('jet')		my_cmap.set_under('w')
 		ybins = np.arange(-0.06, 0.06, 0.001)
 		xbins = np.arange(-0.06, 0.06, 0.001)
+		my_clim = (0,70)
 		gs = gridspec.GridSpec(2,2)
 		ax1 = fig.add_subplot(gs[0,0], projection='3d')
 		ax1.scatter(x,y,z, s=starmass)
 		ax2 = fig.add_subplot(gs[0,1])
 		H, xedges, yedges = np.histogram2d(y,x,bins=(ybins,xbins))
-		ax2.imshow(H, extent=[-0.06,0.06,-0.06,0.06], interpolation='nearest', origin='lower', aspect='auto',cmap=my_cmap, vmin=0.1, clim=(0,60))
+		ax2.imshow(H, extent=[-0.06,0.06,-0.06,0.06], interpolation='nearest', origin='lower', aspect='auto',cmap=my_cmap, vmin=0.1, clim=my_clim)
 		#ax2.scatter(x,y, s=mass)
 		ax2.set_xlabel(r'$x[Mpc]$')
 		ax2.set_ylabel(r'$y[Mpc]$')
 		ax3 = fig.add_subplot(gs[1,0])
 		H, xedges, yedges = np.histogram2d(z,x,bins=(ybins,xbins))
-		ax3.imshow(H, extent=[-0.06,0.06,-0.06,0.06], interpolation='nearest', origin='lower', aspect='auto',cmap=my_cmap, vmin=0.1, clim=(0,60))
+		ax3.imshow(H, extent=[-0.06,0.06,-0.06,0.06], interpolation='nearest', origin='lower', aspect='auto',cmap=my_cmap, vmin=0.1, clim=my_clim)
 		#ax3.scatter(x,z, s=mass)
 		ax3.set_xlabel(r'$x[Mpc]$')
 		ax3.set_ylabel(r'$z[Mpc]$')
 		ax4 = fig.add_subplot(gs[1,1])
 		H, xedges, yedges = np.histogram2d(z,y,bins=(ybins,xbins))
-		ax4.imshow(H, extent=[-0.06,0.06,-0.06,0.06], interpolation='nearest', origin='lower', aspect='auto',cmap=my_cmap, vmin=0.1, clim=(0,60))
+		ax4.imshow(H, extent=[-0.06,0.06,-0.06,0.06], interpolation='nearest', origin='lower', aspect='auto',cmap=my_cmap, vmin=0.1, clim=my_clim)
 		#ax4.scatter(y,z, s=mass)
 		ax4.set_xlabel(r'$y[Mpc]$')
 		ax4.set_ylabel(r'$z[Mpc]$')
