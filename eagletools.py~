@@ -14,8 +14,6 @@ run = "L0050N0752"
 sim = "/data5/simulations/EAGLE/"+run+"/REFERENCE/data"
 tag = "028_z000p000"
 
-#Test
-
 def ensure_dir(f):
 	d = os.path.dirname(f)
 	if not os.path.exists(d):
