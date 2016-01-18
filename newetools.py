@@ -12,7 +12,8 @@ import csv
 import sys
 
 default_run = "L0050N0752"
-default_sim = "/data5/simulations/EAGLE/"+default_run+"/REFERENCE/data"
+default_dir = "/data5/simulations/EAGLE/"
+default_model = "REFERENCE"
 default_tag = "028_z000p000"
 
 boxsize = E.readAttribute("SUBFIND", default_sim, default_tag, "/Header/BoxSize")
@@ -47,14 +48,23 @@ def correctwrap(rel_pos):
 	return np.array(rel_pos)	
 
 
-def loadparticles(run=default_run,sim=default_sim,tag=default_tag):
+def loadparticles(run=default_run,tag=default_tag,model=default_model,directory=default_dir):
 	""" This loads the particle data for a given simulation and returns an array with that data. """
-	groupnum_type = np.array( [E.readArray("PARTDATA", sim, tag, "/PartType0/GroupNumber"), E.readArray("PARTDATA", sim, tag, "/PartType1/GroupNumber"), E.readArray("PARTDATA", sim, tag, "/PartType4/GroupNumber"), E.readArray("PARTDATA", sim, tag, "/PartType5/GroupNumber")] )
-	subgroupnum_type = np.array( [E.readArray("PARTDATA", sim, tag, "/PartType0/SubGroupNumber"), E.readArray("PARTDATA", sim, tag, "/PartType1/SubGroupNumber"), E.readArray("PARTDATA", sim, tag, "/PartType4/SubGroupNumber"), E.readArray("PARTDATA", sim, tag, "/PartType5/SubGroupNumber")] )
-	pos_type = np.array( [E.readArray("PARTDATA", sim, tag, "/PartType0/Coordinates"), E.readArray("PARTDATA", sim, tag, "/PartType1/Coordinates"), E.readArray("PARTDATA", sim, tag, "/PartType4/Coordinates"), E.readArray("PARTDATA", sim, tag, "/PartType5/Coordinates")] )
-	mass_type = np.array( [E.readArray("PARTDATA", sim, tag, "/PartType0/Mass"), (np.ones(len(pos_type[1]))*masstable[1]) , E.readArray("PARTDATA", sim, tag, "/PartType4/Mass"), E.readArray("PARTDATA", sim, tag, "/PartType5/Mass")])
-	vel_type = np.array( [E.readArray("PARTDATA", sim, tag, "/PartType0/Velocity"), E.readArray("PARTDATA", sim, tag, "/PartType1/Velocity"), E.readArray("PARTDATA", sim, tag, "/PartType4/Velocity"), E.readArray("PARTDATA", sim, tag, "/PartType5/Velocity")] )
-	stars_abundances = np.array( [E.readArray("PARTDATA", sim, tag, "/PartType4/SmoothedElementAbundance/Hydrogen"), E.readArray("PARTDATA", sim, tag, "/PartType4/SmoothedElementAbundance/Helium"), E.readArray("PARTDATA", sim, tag, "/PartType4/SmoothedElementAbundance/Carbon"), E.readArray("PARTDATA", sim, tag, "/PartType4/SmoothedElementAbundance/Nitrogen"), E.readArray("PARTDATA", sim, tag, "/PartType4/SmoothedElementAbundance/Oxygen"), E.readArray("PARTDATA", sim, tag, "/PartType4/SmoothedElementAbundance/Neon"), E.readArray("PARTDATA", sim, tag, "/PartType4/SmoothedElementAbundance/Magnesium"), E.readArray("PARTDATA", sim, tag, "/PartType4/SmoothedElementAbundance/Silicon"), E.readArray("PARTDATA", sim, tag, "/PartType4/SmoothedElementAbundance/Iron")])
+	print "Loading particle data for %s - %s - %s" %(run,model,tag)
+	sim = default_dir + run + "/" + model + "/data"
+	print "Loading group numbers..." 
+	groupnum_type = np.array( [E.readArray("PARTDATA", sim, tag, "/PartType0/GroupNumber",verbose=False), E.readArray("PARTDATA", sim, tag, "/PartType1/GroupNumber",verbose=False), E.readArray("PARTDATA", sim, tag, "/PartType4/GroupNumber",verbose=False), E.readArray("PARTDATA", sim, tag, "/PartType5/GroupNumber",verbose=False)] )
+	print "Loading subgroup numbers..."
+	subgroupnum_type = np.array( [E.readArray("PARTDATA", sim, tag, "/PartType0/SubGroupNumber",verbose=False), E.readArray("PARTDATA", sim, tag, "/PartType1/SubGroupNumber",verbose=False), E.readArray("PARTDATA", sim, tag, "/PartType4/SubGroupNumber",verbose=False), E.readArray("PARTDATA", sim, tag, "/PartType5/SubGroupNumber",verbose=False)] )
+	print "Loading particle coordinates..."
+	pos_type = np.array( [E.readArray("PARTDATA", sim, tag, "/PartType0/Coordinates",verbose=False), E.readArray("PARTDATA", sim, tag, "/PartType1/Coordinates",verbose=False), E.readArray("PARTDATA", sim, tag, "/PartType4/Coordinates",verbose=False), E.readArray("PARTDATA", sim, tag, "/PartType5/Coordinates",verbose=False)] )
+	print "Loading particle masses..."
+	mass_type = np.array( [E.readArray("PARTDATA", sim, tag, "/PartType0/Mass",verbose=False), (np.ones(len(pos_type[1]))*masstable[1]) , E.readArray("PARTDATA", sim, tag, "/PartType4/Mass",verbose=False), E.readArray("PARTDATA", sim, tag, "/PartType5/Mass",verbose=False)])
+	print "Loading particle velocities..."
+	vel_type = np.array( [E.readArray("PARTDATA", sim, tag, "/PartType0/Velocity",verbose=False), E.readArray("PARTDATA", sim, tag, "/PartType1/Velocity",verbose=False), E.readArray("PARTDATA", sim, tag, "/PartType4/Velocity",verbose=False), E.readArray("PARTDATA", sim, tag, "/PartType5/Velocity",verbose=False)] )
+	print "Loading particle abundances..."
+	stars_abundances = np.array( [E.readArray("PARTDATA", sim, tag, "/PartType4/SmoothedElementAbundance/Hydrogen",verbose=False), E.readArray("PARTDATA", sim, tag, "/PartType4/SmoothedElementAbundance/Helium",verbose=False), E.readArray("PARTDATA", sim, tag, "/PartType4/SmoothedElementAbundance/Carbon",verbose=False), E.readArray("PARTDATA", sim, tag, "/PartType4/SmoothedElementAbundance/Nitrogen",verbose=False), E.readArray("PARTDATA", sim, tag, "/PartType4/SmoothedElementAbundance/Oxygen",verbose=False), E.readArray("PARTDATA", sim, tag, "/PartType4/SmoothedElementAbundance/Neon",verbose=False), E.readArray("PARTDATA", sim, tag, "/PartType4/SmoothedElementAbundance/Magnesium",verbose=False), E.readArray("PARTDATA", sim, tag, "/PartType4/SmoothedElementAbundance/Silicon",verbose=False), E.readArray("PARTDATA", sim, tag, "/PartType4/SmoothedElementAbundance/Iron",verbose=False)])
+	print "Done loading."
 	return np.array([groupnum_type, subgroupnum_type, pos_type, mass_type, vel_type, stars_abundances])
 	
 
@@ -171,7 +181,8 @@ def halo(partstack,fofdat,groupnum, plot=True, partdat_out=False, fofdat_out=Fal
 		xbins = np.arange(0,0.05,0.001)
 		ybins = np.arange(-2,2,0.05)
 		H, xedges, yedges = np.histogram2d(starjz_jc,starr_xy,bins=(ybins,xbins))
-		my_cmap = matplotlib.cm.get_cmap('jet')		my_cmap.set_under('w')
+		my_cmap = matplotlib.cm.get_cmap('jet')
+		my_cmap.set_under('w')
 		params = {'axes.labelsize': 14, 'xtick.labelsize': 10, 'ytick.labelsize': 10, 'text.usetex': True, 'lines.linewidth' : 2}
 		plt.rcParams.update(params)
 		fig, ax = plt.subplots(1,2)
@@ -192,7 +203,8 @@ def halo(partstack,fofdat,groupnum, plot=True, partdat_out=False, fofdat_out=Fal
 		plt.rcParams.update(params)
 		from mpl_toolkits.mplot3d import Axes3D
 		fig = plt.figure()
-		my_cmap = matplotlib.cm.get_cmap('jet')		my_cmap.set_under('w')
+		my_cmap = matplotlib.cm.get_cmap('jet')
+		my_cmap.set_under('w')
 		ybins = np.arange(-0.06, 0.06, 0.001)
 		xbins = np.arange(-0.06, 0.06, 0.001)
 		my_clim = (0,150)
@@ -264,7 +276,8 @@ def halo(partstack,fofdat,groupnum, plot=True, partdat_out=False, fofdat_out=Fal
 				radial_a_fe.append(a_fe_bin)
 		xbins = np.linspace(-3, 1, 40)
 		ybins = np.linspace(-1.5,1.5, 40)
-		my_cmap = matplotlib.cm.get_cmap('jet')		my_cmap.set_under('w')
+		my_cmap = matplotlib.cm.get_cmap('jet')
+		my_cmap.set_under('w')
 		#produce plot
 		params = {'axes.labelsize': 14, 'xtick.labelsize': 8, 'ytick.labelsize': 8, 'text.usetex': True, 'lines.linewidth' : 2, 'axes.titlesize' : 6}
 		plt.rcParams.update(params)
