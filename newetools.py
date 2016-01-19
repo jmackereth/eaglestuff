@@ -16,6 +16,8 @@ default_dir = "/data5/simulations/EAGLE/"
 default_model = "REFERENCE"
 default_tag = "028_z000p000"
 
+verbose_option = False #Sets verbose = True/False for all reading
+
 def ensure_dir(f):
 	""" Ensure a a file exists and if not make the relevant path """
 	d = os.path.dirname(f)
@@ -23,6 +25,7 @@ def ensure_dir(f):
 			os.makedirs(d)
 
 abundance_path = "/PartType4/SmoothedElementAbundance/"
+
 def loadparticles(run=default_run,tag=default_tag,model=default_model,directory=default_dir):
 	""" This loads the particle data for a given simulation and returns an array with that data. """
 	print "Loading particle data for %s - %s - %s" %(run,model,tag)
@@ -33,40 +36,40 @@ def loadparticles(run=default_run,tag=default_tag,model=default_model,directory=
 	boxsize = boxsize/h
 	sim_data = [sim,boxsize,h,masstable] # Keep some simulation information for later
 	print "Loading group numbers..." 
-	groupnum_type = np.array( [E.readArray("PARTDATA", sim, tag, "/PartType0/GroupNumber"), 
-		E.readArray("PARTDATA", sim, tag, "/PartType1/GroupNumber"), 
-		E.readArray("PARTDATA", sim, tag, "/PartType4/GroupNumber"), 
-		E.readArray("PARTDATA", sim, tag, "/PartType5/GroupNumber")] )
+	groupnum_type = np.array( [E.readArray("PARTDATA", sim, tag, "/PartType0/GroupNumber",verbose=verbose_option), 
+		E.readArray("PARTDATA", sim, tag, "/PartType1/GroupNumber",verbose=verbose_option), 
+		E.readArray("PARTDATA", sim, tag, "/PartType4/GroupNumber",verbose=verbose_option), 
+		E.readArray("PARTDATA", sim, tag, "/PartType5/GroupNumber",verbose=verbose_option)] )
 	print "Loading subgroup numbers..."
-	subgroupnum_type = np.array( [E.readArray("PARTDATA", sim, tag, "/PartType0/SubGroupNumber"), 
-		E.readArray("PARTDATA", sim, tag, "/PartType1/SubGroupNumber"), 
-		E.readArray("PARTDATA", sim, tag, "/PartType4/SubGroupNumber"), 
-		E.readArray("PARTDATA", sim, tag, "/PartType5/SubGroupNumber")] )
+	subgroupnum_type = np.array( [E.readArray("PARTDATA", sim, tag, "/PartType0/SubGroupNumber",verbose=verbose_option), 
+		E.readArray("PARTDATA", sim, tag, "/PartType1/SubGroupNumber",verbose=verbose_option), 
+		E.readArray("PARTDATA", sim, tag, "/PartType4/SubGroupNumber",verbose=verbose_option), 
+		E.readArray("PARTDATA", sim, tag, "/PartType5/SubGroupNumber",verbose=verbose_option)] )
 	print "Loading particle coordinates..."
-	pos_type = np.array( [E.readArray("PARTDATA", sim, tag, "/PartType0/Coordinates"), 
-		E.readArray("PARTDATA", sim, tag, "/PartType1/Coordinates"), 
-		E.readArray("PARTDATA", sim, tag, "/PartType4/Coordinates"), 
-		E.readArray("PARTDATA", sim, tag, "/PartType5/Coordinates")] )
+	pos_type = np.array( [E.readArray("PARTDATA", sim, tag, "/PartType0/Coordinates",verbose=verbose_option), 
+		E.readArray("PARTDATA", sim, tag, "/PartType1/Coordinates",verbose=verbose_option), 
+		E.readArray("PARTDATA", sim, tag, "/PartType4/Coordinates",verbose=verbose_option), 
+		E.readArray("PARTDATA", sim, tag, "/PartType5/Coordinates",verbose=verbose_option)] )
 	print "Loading particle masses..."
-	mass_type = np.array( [E.readArray("PARTDATA", sim, tag, "/PartType0/Mass"), 
+	mass_type = np.array( [E.readArray("PARTDATA", sim, tag, "/PartType0/Mass",verbose=verbose_option), 
 		(np.ones(len(pos_type[1]))*masstable[1]) , 
-		E.readArray("PARTDATA", sim, tag, "/PartType4/Mass"), 
-		E.readArray("PARTDATA", sim, tag, "/PartType5/Mass")])
+		E.readArray("PARTDATA", sim, tag, "/PartType4/Mass",verbose=verbose_option), 
+		E.readArray("PARTDATA", sim, tag, "/PartType5/Mass",verbose=verbose_option)])
 	print "Loading particle velocities..."
-	vel_type = np.array( [E.readArray("PARTDATA", sim, tag, "/PartType0/Velocity"), 
-		E.readArray("PARTDATA", sim, tag, "/PartType1/Velocity"), 
-		E.readArray("PARTDATA", sim, tag, "/PartType4/Velocity"), 
-		E.readArray("PARTDATA", sim, tag, "/PartType5/Velocity")] )
+	vel_type = np.array( [E.readArray("PARTDATA", sim, tag, "/PartType0/Velocity",verbose=verbose_option), 
+		E.readArray("PARTDATA", sim, tag, "/PartType1/Velocity",verbose=verbose_option), 
+		E.readArray("PARTDATA", sim, tag, "/PartType4/Velocity",verbose=verbose_option), 
+		E.readArray("PARTDATA", sim, tag, "/PartType5/Velocity",verbose=verbose_option)] )
 	print "Loading particle abundances..."
-	stars_abundances = np.array( [E.readArray("PARTDATA", sim, tag, abundance_path+"Hydrogen"),  
-		E.readArray("PARTDATA", sim, tag, abundance_path+"Helium"), 
-		E.readArray("PARTDATA", sim, tag, abundance_path+"Carbon"), 
-		E.readArray("PARTDATA", sim, tag, abundance_path+"Nitrogen"), 
-		E.readArray("PARTDATA", sim, tag, abundance_path+"Oxygen"), 
-		E.readArray("PARTDATA", sim, tag, abundance_path+"Neon"), 
-		E.readArray("PARTDATA", sim, tag, abundance_path+"Magnesium"), 
-		E.readArray("PARTDATA", sim, tag, abundance_path+"Silicon"), 
-		E.readArray("PARTDATA", sim, tag, abundance_path+"Iron")])
+	stars_abundances = np.array( [E.readArray("PARTDATA", sim, tag, abundance_path+"Hydrogen",verbose=verbose_option),  
+		E.readArray("PARTDATA", sim, tag, abundance_path+"Helium",verbose=verbose_option), 
+		E.readArray("PARTDATA", sim, tag, abundance_path+"Carbon",verbose=verbose_option), 
+		E.readArray("PARTDATA", sim, tag, abundance_path+"Nitrogen",verbose=verbose_option), 
+		E.readArray("PARTDATA", sim, tag, abundance_path+"Oxygen",verbose=verbose_option), 
+		E.readArray("PARTDATA", sim, tag, abundance_path+"Neon",verbose=verbose_option), 
+		E.readArray("PARTDATA", sim, tag, abundance_path+"Magnesium",verbose=verbose_option), 
+		E.readArray("PARTDATA", sim, tag, abundance_path+"Silicon",verbose=verbose_option), 
+		E.readArray("PARTDATA", sim, tag, abundance_path+"Iron",verbose=verbose_option)])
 	print "Done loading."
 	return np.array([groupnum_type, subgroupnum_type, pos_type, mass_type, vel_type, stars_abundances, sim_data])
 	
@@ -75,22 +78,22 @@ def loadfofdat(run=default_run,tag=default_tag,model=default_model,directory=def
 	""" Load Relevant FOF data """
 	sim = default_dir + run + "/" + model + "/data"
 	print "Loading FoF data for %s - %s - %s" %(run,model,tag)
-	fsid = np.array(E.readArray("SUBFIND_GROUP", sim, tag, "FOF/FirstSubhaloID"))
-	groupnumber = np.array(E.readArray("SUBFIND" , sim, tag, "/Subhalo/GroupNumber"))[fsid]
-	CoP = np.array(E.readArray("SUBFIND", sim, tag, "/Subhalo/CentreOfPotential"))[fsid]
-	subhalovel = np.array(E.readArray("SUBFIND", sim, tag, "/Subhalo/Velocity"))[fsid]
-	r_200 = np.array(E.readArray("SUBFIND_GROUP", sim, tag, "/FOF/Group_R_Crit200"))
-	tot_ang_mom = np.array(E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/Spin"))[fsid]
-	stellar_mass = np.array(E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/Mass") * 1e10)[fsid]
-	stellar_abundances = np.array( [ E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Hydrogen")[fsid], 
-		E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Helium")[fsid], 
-		E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Carbon")[fsid], 
-		E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Nitrogen")[fsid], 
-		E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Oxygen")[fsid], 
-		E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Neon")[fsid], 
-		E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Magnesium")[fsid], 
-		E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Silicon")[fsid], 
-		E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Iron")[fsid]])
+	fsid = np.array(E.readArray("SUBFIND_GROUP", sim, tag, "FOF/FirstSubhaloID",verbose=verbose_option))
+	groupnumber = np.array(E.readArray("SUBFIND" , sim, tag, "/Subhalo/GroupNumber",verbose=verbose_option))[fsid]
+	CoP = np.array(E.readArray("SUBFIND", sim, tag, "/Subhalo/CentreOfPotential",verbose=verbose_option))[fsid]
+	subhalovel = np.array(E.readArray("SUBFIND", sim, tag, "/Subhalo/Velocity",verbose=verbose_option))[fsid]
+	r_200 = np.array(E.readArray("SUBFIND_GROUP", sim, tag, "/FOF/Group_R_Crit200",verbose=verbose_option))
+	tot_ang_mom = np.array(E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/Spin",verbose=verbose_option))[fsid]
+	stellar_mass = np.array(E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/Mass",verbose=verbose_option) * 1e10)[fsid]
+	stellar_abundances = np.array( [ E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Hydrogen",verbose=verbose_option)[fsid], 
+		E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Helium",verbose=verbose_option)[fsid], 
+		E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Carbon",verbose=verbose_option)[fsid], 
+		E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Nitrogen",verbose=verbose_option)[fsid], 
+		E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Oxygen",verbose=verbose_option)[fsid], 
+		E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Neon",verbose=verbose_option)[fsid], 
+		E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Magnesium",verbose=verbose_option)[fsid], 
+		E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Silicon",verbose=verbose_option)[fsid], 
+		E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Iron",verbose=verbose_option)[fsid]])
 	print "Done loading."
 	return np.array([fsid,groupnumber,CoP,subhalovel,r_200,tot_ang_mom, stellar_mass, stellar_abundances ])
 
@@ -172,7 +175,7 @@ def halo(partstack,fofdat,groupnum, partdat, plot=True, partdat_out=False, fofda
 	r200j = starj[radmask]
 	tot_ang_mom = np.sum([r200j[:,0],r200j[:,1],r200j[:,2]], axis =1)
 	tot_ang_mom = tot_ang_mom/np.linalg.norm(tot_ang_mom)
-	print str(tot_ang_mom)
+	#print str(tot_ang_mom)
 	starj_z = starjspec[:,2]
 	starj_c = starv_c*starr_xy
 	starjz_jc = (starj_z/starj_c)
