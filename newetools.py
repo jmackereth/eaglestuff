@@ -134,12 +134,12 @@ def stackparticles(partdat):
 	print "Done stacking particles."
 	return partarray
 
-def loadsim(halonum=72,halo_function=False):
+def loadsim(halonum=72,halofunc=False):
 	siminfo = select_sim()
 	partdat = loadparticles(siminfo)
 	fofdat = loadfofdat(siminfo)
 	partstack = stackparticles(partdat)
-	if halo_function == True:
+	if halofunc == True:
 		halo(partstack,fofdat,halonum,siminfo)
 
 def halo(partstack,fofdat,groupnum, simulation_info, plot=True, partdat_out=False, fofdat_out=False):
