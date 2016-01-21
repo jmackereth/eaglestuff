@@ -11,11 +11,13 @@ import math
 import csv
 import sys
 
-default_run = "L0025N0376"
+default_run = "L0050N0752"
 default_dir = "/data5/simulations/EAGLE/"
 default_model = "REFERENCE"
 default_tag = "028_z000p000"
 
+
+plot_dir='/data5/astjmack/fofplots/'
 verbose_option = False #Sets verbose = True/False for all reading
 
 def select_sim(run=default_run,model=default_model,tag=default_tag,top_directory=default_dir):
@@ -139,6 +141,8 @@ def loadsim(halonum=72,halofunc=False):
 	partdat = loadparticles(siminfo)
 	fofdat = loadfofdat(siminfo)
 	partstack = stackparticles(partdat)
+	simdata  = [siminfo, fofdat, partstack]
+	return simdata
 	if halofunc == True:
 		halo(partstack,fofdat,halonum,siminfo)
 
@@ -198,7 +202,7 @@ def halo(partstack,fofdat,groupnum, simulation_info, plot=True, partdat_out=Fals
 	
 	
 	starmass = stack[:,9][stack[:,0] == 4]
-	if plot == True:
+	if plot == 'show' or plot == 'save':
 		hist, bins = np.histogram(starjz_jc, bins=100, range=(-2,2))
 		centers = (bins[:-1] + bins[1:]) / 2
 		hist = [float(histo)/float(sum(hist)) for histo in hist]
@@ -217,9 +221,13 @@ def halo(partstack,fofdat,groupnum, simulation_info, plot=True, partdat_out=Fals
 		ax[1].imshow(H, extent =[0,0.15*r200,-3,3], interpolation='nearest', origin='lower', aspect='auto',cmap=my_cmap, vmin=0.1)
 		ax[1].set_xlabel(r'$R$ $[Mpc]$')
 		ax[1].set_ylabel(r'$j_z / j_c$')
+		if plot == 'save':
+			ensure_dir(plot_dir)
+			plttitle = plot_dir + 'FOF'+str(int(groupnum))+'jzjc.png'
+			plt.savefig(plttitle, format='png', dpi = 1200)
 		
 	
-	if plot == True:
+	if plot == 'show' or plot == 'save':
 		x = starpos[:,0]
 		y = starpos[:,1]
 		z = starpos[:,2]
@@ -256,7 +264,9 @@ def halo(partstack,fofdat,groupnum, simulation_info, plot=True, partdat_out=Fals
 		fig.subplots_adjust(hspace=0.40, wspace=0.40, right=0.95, top=0.95)
 		fof = "FOF "+ str(groupnum)
 		fig.text(0.5, 0.96, fof)
-		
+		if plot == 'save':
+			plttitle = plot_dir + 'FOF'+str(int(groupnum))+'pos.png'
+			plt.savefig(plttitle, format='png', dpi = 1200)
 	
 	stars_h = stack[:,10][stack[:,0] == 4]
 	stars_fe = stack[:,14][stack[:,0] == 4]
@@ -271,7 +281,7 @@ def halo(partstack,fofdat,groupnum, simulation_info, plot=True, partdat_out=Fals
 	fe_h = np.array([str_fe_h - solar_fe_h for str_fe_h in stars_fe_h])
 	o_fe = np.array([str_o_fe - solar_o_fe for str_o_fe in stars_o_fe])
 
-	if plot == True:
+	if plot == 'show' or plot == 'save':
 		R_pos = starr_xy
 		z_pos = starpos[:,2]
 		a_fe = o_fe
@@ -368,9 +378,11 @@ def halo(partstack,fofdat,groupnum, simulation_info, plot=True, partdat_out=Fals
 		f.text(0.45, 0.96, r'$'+str(z_bins[2]*1000)+' < |z| < '+str(z_bins[3]*1000)+'$ $Kpc$', fontsize=9)
 		#f.set_size_inches(12,6, forward=True)
 		ax13.legend()
-		
+		if plot == 'save':
+			plttitle = plot_dir + 'FOF'+str(int(groupnum))+'alphafe.png'
+			plt.savefig(plttitle, format='png', dpi = 1200)
 
-	if plot == True:
+	if plot == 'show' or plot == 'save':
 		
 
 		len_zbins = len(radial_fe_h)/len(z_bins)
@@ -408,8 +420,11 @@ def halo(partstack,fofdat,groupnum, simulation_info, plot=True, partdat_out=Fals
 			ax[0].set_ylabel(r'$N/N*$')
 			ax[0].set_title(r'$'+str(z_bins[2]*1000)+' < |z| < '+str(z_bins[3]*1000)+'$ $Kpc$')
 			ax[0].legend(loc=2, fontsize='x-small', frameon=False, shadow=False)
-		
-		plt.show()
+		if plot == 'save':
+			plttitle = plot_dir + 'FOF'+str(int(groupnum))+'mdf.png'
+			plt.savefig(plttitle, format='png', dpi = 1200)
+		if plot == 'show' :
+			plt.show()
 
 	if partdat_out == True and fofdat_out == False:
 		partarray = np.dstack((stack[:,0][stack[:,0] == 4], starpos[:,0], starpos[:,1], starpos[:,2], starvel[:,0], starvel[:,1], starvel[:,2], starmass, fe_h, o_fe, starj_z, starj_c, starjz_jc))[0]
