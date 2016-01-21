@@ -11,12 +11,24 @@ import math
 import csv
 import sys
 
-default_run = "L0050N0752"
+default_run = "L0025N0376"
 default_dir = "/data5/simulations/EAGLE/"
 default_model = "REFERENCE"
 default_tag = "028_z000p000"
 
 verbose_option = False #Sets verbose = True/False for all reading
+
+def select_sim(run=default_run,model=default_model,tag=default_tag,top_directory=default_dir):
+	directory = top_directory + run + "/" + model + "/data"
+
+	h = E.readAttribute("SUBFIND", directory, tag, "/Header/HubbleParam")
+	masstable = E.readAttribute("SUBFIND", directory, tag, "/Header/MassTable") / h
+	boxsize = E.readAttribute("SUBFIND", directory, tag, "/Header/BoxSize")
+	boxsize = boxsize/h
+
+	sim_info = [run, model, tag, top_directory, directory, h, masstable, boxsize]
+	print "Selected %s - %s - %s" %(run,model,tag)
+	return sim_info
 
 def ensure_dir(f):
 	""" Ensure a a file exists and if not make the relevant path """
@@ -26,15 +38,11 @@ def ensure_dir(f):
 
 abundance_path = "/PartType4/SmoothedElementAbundance/"
 
-def loadparticles(run=default_run,tag=default_tag,model=default_model,directory=default_dir):
+def loadparticles(simulation_info):
 	""" This loads the particle data for a given simulation and returns an array with that data. """
+	run, model, tag, top_directory, directory, h, masstable, boxsize = simulation_info
 	print "Loading particle data for %s - %s - %s" %(run,model,tag)
-	sim = directory + run + "/" + model + "/data"
-	h = E.readAttribute("SUBFIND", sim, tag, "/Header/HubbleParam")
-	masstable = E.readAttribute("SUBFIND", sim, tag, "/Header/MassTable") / h
-	boxsize = E.readAttribute("SUBFIND", sim, tag, "/Header/BoxSize")
-	boxsize = boxsize/h
-	sim_data = [sim,boxsize,h,masstable] # Keep some simulation information for later
+	sim = directory
 	print "Loading group numbers..." 
 	groupnum_type = np.array( [E.readArray("PARTDATA", sim, tag, "/PartType0/GroupNumber",verbose=verbose_option), 
 		E.readArray("PARTDATA", sim, tag, "/PartType1/GroupNumber",verbose=verbose_option), 
@@ -71,12 +79,13 @@ def loadparticles(run=default_run,tag=default_tag,model=default_model,directory=
 		E.readArray("PARTDATA", sim, tag, abundance_path+"Silicon",verbose=verbose_option), 
 		E.readArray("PARTDATA", sim, tag, abundance_path+"Iron",verbose=verbose_option)])
 	print "Done loading."
-	return np.array([groupnum_type, subgroupnum_type, pos_type, mass_type, vel_type, stars_abundances, sim_data])
+	return np.array([groupnum_type, subgroupnum_type, pos_type, mass_type, vel_type, stars_abundances])
 	
 
-def loadfofdat(run=default_run,tag=default_tag,model=default_model,directory=default_dir):
+def loadfofdat(simulation_info):
 	""" Load Relevant FOF data """
-	sim = default_dir + run + "/" + model + "/data"
+	run, model, tag, top_directory, directory, h, masstable, boxsize = simulation_info
+	sim = directory
 	print "Loading FoF data for %s - %s - %s" %(run,model,tag)
 	fsid = np.array(E.readArray("SUBFIND_GROUP", sim, tag, "FOF/FirstSubhaloID",verbose=verbose_option))
 	groupnumber = np.array(E.readArray("SUBFIND" , sim, tag, "/Subhalo/GroupNumber",verbose=verbose_option))[fsid]
@@ -99,6 +108,7 @@ def loadfofdat(run=default_run,tag=default_tag,model=default_model,directory=def
 
 def stackparticles(partdat):
 	""" Stack Particles ready for use in halo selection etc """
+	print "Stacking particles..."
 	parttype0 = np.zeros(len(partdat[0][0]))
 	parttype1 = np.ones(len(partdat[0][1]))
 	parttype4 = np.ones(len(partdat[0][2]))*4
@@ -121,15 +131,21 @@ def stackparticles(partdat):
 	#print str(np.shape(masses))
 	partarray = np.dstack((types,groupnums,subgroupnums,positions[0],positions[1], positions[2],velocities[0],velocities[1], velocities[2],masses, abunds[0], abunds[2], abunds[3], abunds[4], abunds[8]))
 	partarray = partarray[0]
+	print "Done stacking particles."
 	return partarray
 
-def loadsim():
-	print "To do"
-	#Make a function that runs loadparticles > loadfofdata > stackparticles for ease
+def loadsim(halonum=72,halofunc=False):
+	siminfo = select_sim()
+	partdat = loadparticles(siminfo)
+	fofdat = loadfofdat(siminfo)
+	partstack = stackparticles(partdat)
+	if halofunc == True:
+		halo(partstack,fofdat,halonum,siminfo)
 
-def halo(partstack,fofdat,groupnum, partdat, plot=True, partdat_out=False, fofdat_out=False):
+def halo(partstack,fofdat,groupnum, simulation_info, plot=True, partdat_out=False, fofdat_out=False):
 	""" define a central halo using groupnum and see its jz/jc histogram and morphology """
-	boxsize = partdat[6][1]
+	print "Aligning..."
+	boxsize = simulation_info[7]
 	stack = partstack[(partstack[:,1] == groupnum) & (partstack[:,2] == 0)]
 	fofindex = np.where(fofdat[1] == groupnum)
 	CoP = fofdat[2][fofindex]
@@ -429,6 +445,7 @@ def halo(partstack,fofdat,groupnum, partdat, plot=True, partdat_out=False, fofda
 		fof_stellar_mass = fofdat[6][fofindex]
 		fofarray = np.array(groupnum, fof_stellar_mass, fof_fe_h, low_high_o_fe, high_total_o_fe, jz_jcdiskratio)
 		return partarray, fofarray
-
-
-
+		
+def metallicity_gradient(partstack):
+	print "To do"
+	#To do
