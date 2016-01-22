@@ -11,24 +11,34 @@ import math
 import csv
 import sys
 
-default_run = "L0050N0752"
+default_run = "L0025N0376"
 default_dir = "/data5/simulations/EAGLE/"
 default_model = "REFERENCE"
 default_tag = "028_z000p000"
 
+default_save_location = "/data5/astswalt/EAGLE/eagletools/data/"
 
 plot_dir='/data5/astjmack/fofplots/'
 verbose_option = False #Sets verbose = True/False for all reading
 
-def select_sim(run=default_run,model=default_model,tag=default_tag,top_directory=default_dir):
+def select_sim(run=default_run, model=default_model, tag=default_tag, top_directory=default_dir, recalculate=False, save_loc=default_save_location):
 	directory = top_directory + run + "/" + model + "/data"
+	save_directory = save_loc + "/" + run + "/" + model + "/" + tag
 
 	h = E.readAttribute("SUBFIND", directory, tag, "/Header/HubbleParam")
 	masstable = E.readAttribute("SUBFIND", directory, tag, "/Header/MassTable") / h
 	boxsize = E.readAttribute("SUBFIND", directory, tag, "/Header/BoxSize")
 	boxsize = boxsize/h
+	
+	file_check = len(os.listdir(save_directory))
+	if file_check == 0 or recalculate == True:
+		print "Data will be recalculated."
+		recalc = True
+	else:
+		print "Data will be loaded from numpy files."
+		recalc = False
 
-	sim_info = [run, model, tag, top_directory, directory, h, masstable, boxsize]
+	sim_info = [run, model, tag, top_directory, directory, h, masstable, boxsize, recalc, save_directory]
 	print "Selected %s - %s - %s" %(run,model,tag)
 	return sim_info
 
@@ -42,166 +52,247 @@ abundance_path = "/PartType4/SmoothedElementAbundance/"
 
 def loadparticles(simulation_info):
 	""" This loads the particle data for a given simulation and returns an array with that data. """
-	run, model, tag, top_directory, directory, h, masstable, boxsize = simulation_info
-	print "Loading particle data for %s - %s - %s" %(run,model,tag)
-	sim = directory
-	print "Loading group numbers..." 
-	groupnum_type = np.array( [E.readArray("PARTDATA", sim, tag, "/PartType0/GroupNumber",verbose=verbose_option), 
-		E.readArray("PARTDATA", sim, tag, "/PartType1/GroupNumber",verbose=verbose_option), 
-		E.readArray("PARTDATA", sim, tag, "/PartType4/GroupNumber",verbose=verbose_option), 
-		E.readArray("PARTDATA", sim, tag, "/PartType5/GroupNumber",verbose=verbose_option)] )
-	print "Loading subgroup numbers..."
-	subgroupnum_type = np.array( [E.readArray("PARTDATA", sim, tag, "/PartType0/SubGroupNumber",verbose=verbose_option), 
-		E.readArray("PARTDATA", sim, tag, "/PartType1/SubGroupNumber",verbose=verbose_option), 
-		E.readArray("PARTDATA", sim, tag, "/PartType4/SubGroupNumber",verbose=verbose_option), 
-		E.readArray("PARTDATA", sim, tag, "/PartType5/SubGroupNumber",verbose=verbose_option)] )
-	print "Loading particle coordinates..."
-	pos_type = np.array( [E.readArray("PARTDATA", sim, tag, "/PartType0/Coordinates",verbose=verbose_option), 
-		E.readArray("PARTDATA", sim, tag, "/PartType1/Coordinates",verbose=verbose_option), 
-		E.readArray("PARTDATA", sim, tag, "/PartType4/Coordinates",verbose=verbose_option), 
-		E.readArray("PARTDATA", sim, tag, "/PartType5/Coordinates",verbose=verbose_option)] )
-	print "Loading particle masses..."
-	mass_type = np.array( [E.readArray("PARTDATA", sim, tag, "/PartType0/Mass",verbose=verbose_option), 
-		(np.ones(len(pos_type[1]))*masstable[1]) , 
-		E.readArray("PARTDATA", sim, tag, "/PartType4/Mass",verbose=verbose_option), 
-		E.readArray("PARTDATA", sim, tag, "/PartType5/Mass",verbose=verbose_option)])
-	print "Loading particle velocities..."
-	vel_type = np.array( [E.readArray("PARTDATA", sim, tag, "/PartType0/Velocity",verbose=verbose_option), 
-		E.readArray("PARTDATA", sim, tag, "/PartType1/Velocity",verbose=verbose_option), 
-		E.readArray("PARTDATA", sim, tag, "/PartType4/Velocity",verbose=verbose_option), 
-		E.readArray("PARTDATA", sim, tag, "/PartType5/Velocity",verbose=verbose_option)] )
-	print "Loading particle abundances..."
-	stars_abundances = np.array( [E.readArray("PARTDATA", sim, tag, abundance_path+"Hydrogen",verbose=verbose_option),  
-		E.readArray("PARTDATA", sim, tag, abundance_path+"Helium",verbose=verbose_option), 
-		E.readArray("PARTDATA", sim, tag, abundance_path+"Carbon",verbose=verbose_option), 
-		E.readArray("PARTDATA", sim, tag, abundance_path+"Nitrogen",verbose=verbose_option), 
-		E.readArray("PARTDATA", sim, tag, abundance_path+"Oxygen",verbose=verbose_option), 
-		E.readArray("PARTDATA", sim, tag, abundance_path+"Neon",verbose=verbose_option), 
-		E.readArray("PARTDATA", sim, tag, abundance_path+"Magnesium",verbose=verbose_option), 
-		E.readArray("PARTDATA", sim, tag, abundance_path+"Silicon",verbose=verbose_option), 
-		E.readArray("PARTDATA", sim, tag, abundance_path+"Iron",verbose=verbose_option)])
-	print "Done loading."
-	return np.array([groupnum_type, subgroupnum_type, pos_type, mass_type, vel_type, stars_abundances])
+	run, model, tag, top_directory, directory, h, masstable, boxsize, recalc, save_directory = simulation_info
+	if recalc == True:
+		print "Loading particle data for %s - %s - %s" %(run,model,tag)
+		sim = directory
+		print "Loading group numbers..." 
+		groupnum_type = np.array( [E.readArray("PARTDATA", sim, tag, "/PartType0/GroupNumber",verbose=verbose_option), 
+			E.readArray("PARTDATA", sim, tag, "/PartType1/GroupNumber",verbose=verbose_option), 
+			E.readArray("PARTDATA", sim, tag, "/PartType4/GroupNumber",verbose=verbose_option), 
+			E.readArray("PARTDATA", sim, tag, "/PartType5/GroupNumber",verbose=verbose_option)] )
+		print "Loading subgroup numbers..."
+		subgroupnum_type = np.array( [E.readArray("PARTDATA", sim, tag, "/PartType0/SubGroupNumber",verbose=verbose_option), 
+			E.readArray("PARTDATA", sim, tag, "/PartType1/SubGroupNumber",verbose=verbose_option), 
+			E.readArray("PARTDATA", sim, tag, "/PartType4/SubGroupNumber",verbose=verbose_option), 
+			E.readArray("PARTDATA", sim, tag, "/PartType5/SubGroupNumber",verbose=verbose_option)] )
+		print "Loading particle coordinates..."
+		pos_type = np.array( [E.readArray("PARTDATA", sim, tag, "/PartType0/Coordinates",verbose=verbose_option), 
+			E.readArray("PARTDATA", sim, tag, "/PartType1/Coordinates",verbose=verbose_option), 
+			E.readArray("PARTDATA", sim, tag, "/PartType4/Coordinates",verbose=verbose_option), 
+			E.readArray("PARTDATA", sim, tag, "/PartType5/Coordinates",verbose=verbose_option)] )
+		print "Loading particle masses..."
+		mass_type = np.array( [E.readArray("PARTDATA", sim, tag, "/PartType0/Mass",verbose=verbose_option), 
+			(np.ones(len(pos_type[1]))*masstable[1]) , 
+			E.readArray("PARTDATA", sim, tag, "/PartType4/Mass",verbose=verbose_option), 
+			E.readArray("PARTDATA", sim, tag, "/PartType5/Mass",verbose=verbose_option)])
+		print "Loading particle velocities..."
+		vel_type = np.array( [E.readArray("PARTDATA", sim, tag, "/PartType0/Velocity",verbose=verbose_option), 
+			E.readArray("PARTDATA", sim, tag, "/PartType1/Velocity",verbose=verbose_option), 
+			E.readArray("PARTDATA", sim, tag, "/PartType4/Velocity",verbose=verbose_option), 
+			E.readArray("PARTDATA", sim, tag, "/PartType5/Velocity",verbose=verbose_option)] )
+		print "Loading particle abundances..."
+		stars_abundances = np.array( [E.readArray("PARTDATA", sim, tag, abundance_path+"Hydrogen",verbose=verbose_option),  
+			E.readArray("PARTDATA", sim, tag, abundance_path+"Helium",verbose=verbose_option), 
+			E.readArray("PARTDATA", sim, tag, abundance_path+"Carbon",verbose=verbose_option), 
+			E.readArray("PARTDATA", sim, tag, abundance_path+"Nitrogen",verbose=verbose_option), 
+			E.readArray("PARTDATA", sim, tag, abundance_path+"Oxygen",verbose=verbose_option), 
+			E.readArray("PARTDATA", sim, tag, abundance_path+"Neon",verbose=verbose_option), 
+			E.readArray("PARTDATA", sim, tag, abundance_path+"Magnesium",verbose=verbose_option), 
+			E.readArray("PARTDATA", sim, tag, abundance_path+"Silicon",verbose=verbose_option), 
+			E.readArray("PARTDATA", sim, tag, abundance_path+"Iron",verbose=verbose_option)])
+		print "Done loading."
+		return np.array([groupnum_type, subgroupnum_type, pos_type, mass_type, vel_type, stars_abundances])
+	else:
+		print "loadparticles(): No need to load particle data, data will be loaded from file."
+		return 0
 	
 
 def loadfofdat(simulation_info):
 	""" Load Relevant FOF data """
-	run, model, tag, top_directory, directory, h, masstable, boxsize = simulation_info
-	sim = directory
-	print "Loading FoF data for %s - %s - %s" %(run,model,tag)
-	fsid = np.array(E.readArray("SUBFIND_GROUP", sim, tag, "FOF/FirstSubhaloID",verbose=verbose_option))
-	groupnumber = np.array(E.readArray("SUBFIND" , sim, tag, "/Subhalo/GroupNumber",verbose=verbose_option))[fsid]
-	CoP = np.array(E.readArray("SUBFIND", sim, tag, "/Subhalo/CentreOfPotential",verbose=verbose_option))[fsid]
-	subhalovel = np.array(E.readArray("SUBFIND", sim, tag, "/Subhalo/Velocity",verbose=verbose_option))[fsid]
-	r_200 = np.array(E.readArray("SUBFIND_GROUP", sim, tag, "/FOF/Group_R_Crit200",verbose=verbose_option))
-	tot_ang_mom = np.array(E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/Spin",verbose=verbose_option))[fsid]
-	stellar_mass = np.array(E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/Mass",verbose=verbose_option) * 1e10)[fsid]
-	stellar_abundances = np.array( [ E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Hydrogen",verbose=verbose_option)[fsid], 
-		E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Helium",verbose=verbose_option)[fsid], 
-		E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Carbon",verbose=verbose_option)[fsid], 
-		E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Nitrogen",verbose=verbose_option)[fsid], 
-		E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Oxygen",verbose=verbose_option)[fsid], 
-		E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Neon",verbose=verbose_option)[fsid], 
-		E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Magnesium",verbose=verbose_option)[fsid], 
-		E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Silicon",verbose=verbose_option)[fsid], 
-		E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Iron",verbose=verbose_option)[fsid]])
-	print "Done loading."
-	return np.array([fsid,groupnumber,CoP,subhalovel,r_200,tot_ang_mom, stellar_mass, stellar_abundances ])
+	run, model, tag, top_directory, directory, h, masstable, boxsize, recalc, save_directory = simulation_info
+	if recalc == True:
+		sim = directory
+		print "Loading FoF data for %s - %s - %s" %(run,model,tag)
+		fsid = np.array(E.readArray("SUBFIND_GROUP", sim, tag, "FOF/FirstSubhaloID",verbose=verbose_option))
+		groupnumber = np.array(E.readArray("SUBFIND" , sim, tag, "/Subhalo/GroupNumber",verbose=verbose_option))[fsid]
+		CoP = np.array(E.readArray("SUBFIND", sim, tag, "/Subhalo/CentreOfPotential",verbose=verbose_option))[fsid]
+		subhalovel = np.array(E.readArray("SUBFIND", sim, tag, "/Subhalo/Velocity",verbose=verbose_option))[fsid]
+		r_200 = np.array(E.readArray("SUBFIND_GROUP", sim, tag, "/FOF/Group_R_Crit200",verbose=verbose_option))
+		tot_ang_mom = np.array(E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/Spin",verbose=verbose_option))[fsid]
+		stellar_mass = np.array(E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/Mass",verbose=verbose_option) * 1e10)[fsid]
+		stellar_abundances = np.array( [ E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Hydrogen",verbose=verbose_option)[fsid], 
+			E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Helium",verbose=verbose_option)[fsid], 
+			E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Carbon",verbose=verbose_option)[fsid], 
+			E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Nitrogen",verbose=verbose_option)[fsid], 
+			E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Oxygen",verbose=verbose_option)[fsid], 
+			E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Neon",verbose=verbose_option)[fsid], 
+			E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Magnesium",verbose=verbose_option)[fsid], 
+			E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Silicon",verbose=verbose_option)[fsid], 
+			E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Iron",verbose=verbose_option)[fsid]])
+		print "Done loading."
+		return np.array([fsid,groupnumber,CoP,subhalovel,r_200,tot_ang_mom, stellar_mass, stellar_abundances ])
+	else:
+		print "loadfofdat(): No need to load fof data, data will be loaded from file."
+		return 0
 
 def stackparticles(partdat):
 	""" Stack Particles ready for use in halo selection etc """
-	print "Stacking particles..."
-	parttype0 = np.zeros(len(partdat[0][0]))
-	parttype1 = np.ones(len(partdat[0][1]))
-	parttype4 = np.ones(len(partdat[0][2]))*4
-	parttype5 = np.ones(len(partdat[0][3]))*5
-	types = np.hstack((parttype0,parttype1,parttype4,parttype5))
-	groupnums = np.hstack((partdat[0][0], partdat[0][1], partdat[0][2], partdat[0][3]))
-	subgroupnums = np.hstack((partdat[1][0], partdat[1][1], partdat[1][2], partdat[1][3]))
-	positions = np.hstack((partdat[2][0].T, partdat[2][1].T, partdat[2][2].T, partdat[2][3].T))
-	starabundances = partdat[5]
-	#print str(np.shape(starabundances))
-	parttype0abunds = np.zeros((9,len(partdat[0][0])))
-	parttype1abunds = np.zeros((9,len(partdat[0][1])))
-	parttype5abunds = np.zeros((9,len(partdat[0][3])))
-	abunds = np.hstack((parttype0abunds, parttype1abunds, starabundances, parttype5abunds))
-	#positions = positions.T
-	#print str(np.shape(positions))
-	velocities = np.hstack((partdat[4][0].T, partdat[4][1].T, partdat[4][2].T, partdat[4][3].T))
-	#velocities = velocities.T
-	masses = np.hstack((partdat[3][0], partdat[3][1], partdat[3][2], partdat[3][3]))
-	#print str(np.shape(masses))
-	partarray = np.dstack((types,groupnums,subgroupnums,positions[0],positions[1], positions[2],velocities[0],velocities[1], velocities[2],masses, abunds[0], abunds[2], abunds[3], abunds[4], abunds[8]))
-	partarray = partarray[0]
-	print "Done stacking particles."
-	return partarray
+	if partdat != 0:
+		print "Stacking particles..."
+		parttype0 = np.zeros(len(partdat[0][0]))
+		parttype1 = np.ones(len(partdat[0][1]))
+		parttype4 = np.ones(len(partdat[0][2]))*4
+		parttype5 = np.ones(len(partdat[0][3]))*5
+		types = np.hstack((parttype0,parttype1,parttype4,parttype5))
+		groupnums = np.hstack((partdat[0][0], partdat[0][1], partdat[0][2], partdat[0][3]))
+		subgroupnums = np.hstack((partdat[1][0], partdat[1][1], partdat[1][2], partdat[1][3]))
+		positions = np.hstack((partdat[2][0].T, partdat[2][1].T, partdat[2][2].T, partdat[2][3].T))
+		starabundances = partdat[5]
+		#print str(np.shape(starabundances))
+		parttype0abunds = np.zeros((9,len(partdat[0][0])))
+		parttype1abunds = np.zeros((9,len(partdat[0][1])))
+		parttype5abunds = np.zeros((9,len(partdat[0][3])))
+		abunds = np.hstack((parttype0abunds, parttype1abunds, starabundances, parttype5abunds))
+		#positions = positions.T
+		#print str(np.shape(positions))
+		velocities = np.hstack((partdat[4][0].T, partdat[4][1].T, partdat[4][2].T, partdat[4][3].T))
+		#velocities = velocities.T
+		masses = np.hstack((partdat[3][0], partdat[3][1], partdat[3][2], partdat[3][3]))
+		#print str(np.shape(masses))
+		partarray = np.dstack((types,groupnums,subgroupnums,positions[0],positions[1], positions[2],velocities[0],velocities[1], velocities[2],masses, abunds[0], abunds[2], abunds[3], abunds[4], abunds[8]))
+		partarray = partarray[0]
+		print "Done stacking particles."
+		return partarray
+	else:
+		print "stackparticles(): No need to load fof data, data will be loaded from file."
+		return 0
 
-def loadsim(halonum=72,halofunc=False):
-	siminfo = select_sim()
+def loadsim(halonum=72,halofunc=False,returns=False,recalc=False):
+	siminfo = select_sim(recalculate=recalc)
 	partdat = loadparticles(siminfo)
 	fofdat = loadfofdat(siminfo)
 	partstack = stackparticles(partdat)
-	simdata  = [siminfo, fofdat, partstack]
-	return simdata
+	if returns == True:
+		simdata  = [siminfo, fofdat, partstack]
+		return simdata
 	if halofunc == True:
 		halo(partstack,fofdat,halonum,siminfo)
 
 def halo(partstack,fofdat,groupnum, simulation_info, plot=True, partdat_out=False, fofdat_out=False):
 	""" define a central halo using groupnum and see its jz/jc histogram and morphology """
-	print "Aligning..."
-	boxsize = simulation_info[7]
-	stack = partstack[(partstack[:,1] == groupnum) & (partstack[:,2] == 0)]
-	fofindex = np.where(fofdat[1] == groupnum)
-	CoP = fofdat[2][fofindex]
-	r200 = fofdat[4][fofindex]
-	pos = stack[:,3:6]-(CoP-(boxsize/2))
-	subhalovel = fofdat[3][fofindex]
-	pos[:,:3] %= boxsize
-	pos[:,:3] -= boxsize/2
-	radii = np.linalg.norm(pos, axis = 1)
-	radsort = np.argsort(radii)
-	radii = radii[radsort]
-	stack = stack[radsort]
-	pos = pos[radsort]
-	cum_mass = np.cumsum(stack[:,9])
-	starinnermass = cum_mass[stack[:,0] == 4]
-	starmass = stack[:,9][stack[:,0] == 4]
-	starpos = pos[stack[:,0] == 4]
-	starradii = np.linalg.norm(starpos, axis = 1)
-	radmask = starradii < 0.15*r200
-	starvel = stack[:,6:9][stack[:,0] == 4]-subhalovel
-	massvel = np.array([starvel[i]*starmass[i] for i in range(0,len(starvel))])
-	#print starpos,massvel
-	starj = np.array([np.cross(starp,starv) for starp,starv in zip(starpos,massvel)])
-	r200j = starj[radmask]
-	tot_ang_mom = np.sum(r200j, axis = 0)
-	a = np.matrix([tot_ang_mom[0],tot_ang_mom[1],tot_ang_mom[2]])/np.linalg.norm([tot_ang_mom[0],tot_ang_mom[1],tot_ang_mom[2]])
-	b = np.matrix([0,0,1])
-	v = np.cross(a,b)
-	s = np.linalg.norm(v)
-	c = np.dot(a,b.T)
-	vx = np.matrix([[0,-v[0,2],v[0,1]],[v[0,2],0,-v[0,0]],[-v[0,1],v[0,0],0]])
-	transform = np.eye(3,3) + vx + (vx*vx)*((1-c[0,0])/s**2)
-	starpos = np.array([np.matmul(transform,starpos[i].T) for i in range(0,len(starpos))])[:,0]
-	starvel = np.array([np.matmul(transform,starvel[i].T) for i in range(0,len(starvel))])[:,0]
-	starr_xy = np.linalg.norm(np.dstack((starpos[:,0],starpos[:,1]))[0], axis = 1)
-	G = 4.302e2
-	starv_c = np.sqrt((G*starinnermass)/starr_xy)
-	massvel = np.array([starvel[i]*starmass[i] for i in range(0,len(starvel))])
-	starj = np.array([np.cross(starp,starv) for starp,starv in zip(starpos,massvel)])
-	starjspec = np.array([np.cross(starp,starv) for starp,starv in zip(starpos,starvel)])
-	starradii = np.linalg.norm(starpos, axis = 1)
-	radmask = starradii < 0.15*r200 
-	r200j = starj[radmask]
-	tot_ang_mom = np.sum([r200j[:,0],r200j[:,1],r200j[:,2]], axis =1)
-	tot_ang_mom = tot_ang_mom/np.linalg.norm(tot_ang_mom)
-	#print str(tot_ang_mom)
-	starj_z = starjspec[:,2]
-	starj_c = starv_c*starr_xy
-	starjz_jc = (starj_z/starj_c)
-	
-	
-	starmass = stack[:,9][stack[:,0] == 4]
+	recalculate = simulation_info[8]
+	save_directory = simulation_info[9]
+
+	if recalculate == True:
+		print "Aligning..."
+		boxsize = simulation_info[7]
+		stack = partstack[(partstack[:,1] == groupnum) & (partstack[:,2] == 0)]
+		fofindex = np.where(fofdat[1] == groupnum)
+		CoP = fofdat[2][fofindex]
+		r200 = fofdat[4][fofindex]
+		pos = stack[:,3:6]-(CoP-(boxsize/2))
+		subhalovel = fofdat[3][fofindex]
+		pos[:,:3] %= boxsize
+		pos[:,:3] -= boxsize/2
+		radii = np.linalg.norm(pos, axis = 1)
+		radsort = np.argsort(radii)
+		radii = radii[radsort]
+		stack = stack[radsort]
+		pos = pos[radsort]
+		cum_mass = np.cumsum(stack[:,9])
+		starinnermass = cum_mass[stack[:,0] == 4]
+		starmass = stack[:,9][stack[:,0] == 4]
+		starpos = pos[stack[:,0] == 4]
+		starradii = np.linalg.norm(starpos, axis = 1)
+		radmask = starradii < 0.15*r200
+		starvel = stack[:,6:9][stack[:,0] == 4]-subhalovel
+		massvel = np.array([starvel[i]*starmass[i] for i in range(0,len(starvel))])
+		starj = np.array([np.cross(starp,starv) for starp,starv in zip(starpos,massvel)])
+		r200j = starj[radmask]
+		tot_ang_mom = np.sum(r200j, axis = 0)
+		a = np.matrix([tot_ang_mom[0],tot_ang_mom[1],tot_ang_mom[2]])/np.linalg.norm([tot_ang_mom[0],tot_ang_mom[1],tot_ang_mom[2]])
+		b = np.matrix([0,0,1])
+		v = np.cross(a,b)
+		s = np.linalg.norm(v)
+		c = np.dot(a,b.T)
+		vx = np.matrix([[0,-v[0,2],v[0,1]],[v[0,2],0,-v[0,0]],[-v[0,1],v[0,0],0]])
+		transform = np.eye(3,3) + vx + (vx*vx)*((1-c[0,0])/s**2)
+		starpos = np.array([np.matmul(transform,starpos[i].T) for i in range(0,len(starpos))])[:,0]
+		starvel = np.array([np.matmul(transform,starvel[i].T) for i in range(0,len(starvel))])[:,0]
+		starr_xy = np.linalg.norm(np.dstack((starpos[:,0],starpos[:,1]))[0], axis = 1)
+		G = 4.302e2
+		starv_c = np.sqrt((G*starinnermass)/starr_xy)
+		massvel = np.array([starvel[i]*starmass[i] for i in range(0,len(starvel))])
+		starj = np.array([np.cross(starp,starv) for starp,starv in zip(starpos,massvel)])
+		starjspec = np.array([np.cross(starp,starv) for starp,starv in zip(starpos,starvel)])
+		starradii = np.linalg.norm(starpos, axis = 1)
+		radmask = starradii < 0.15*r200
+		r200j = starj[radmask]
+		tot_ang_mom = np.sum([r200j[:,0],r200j[:,1],r200j[:,2]], axis =1)
+		tot_ang_mom = tot_ang_mom/np.linalg.norm(tot_ang_mom)
+		#print str(tot_ang_mom)
+		starj_z = starjspec[:,2]
+		starj_c = starv_c*starr_xy
+		starjz_jc = (starj_z/starj_c)
+			
+		stars_h = stack[:,10][stack[:,0] == 4]
+		stars_fe = stack[:,14][stack[:,0] == 4]
+		stars_o = stack[:,13][stack[:,0] == 4]
+		solar_h = 0.706498
+		solar_fe = 0.00110322
+		solar_o = 0.00549262
+		solar_fe_h = np.log10(solar_fe/solar_h)
+		solar_o_fe = np.log10(solar_o/solar_h)-(solar_fe_h)
+		stars_fe_h = np.log10(stars_fe/stars_h)
+		stars_o_fe = np.log10(stars_o/stars_h)-(stars_fe_h)
+		fe_h = np.array([str_fe_h - solar_fe_h for str_fe_h in stars_fe_h])
+		o_fe = np.array([str_o_fe - solar_o_fe for str_o_fe in stars_o_fe])
+
+		starmass = stack[:,9][stack[:,0] == 4]
+
+		jz_jcdisky = float(len(((starjz_jc < 1.2) & (starjz_jc > 0.7))))
+		lenjz_jc = float(len(starjz_jc))
+		jz_jcdiskratio = jz_jcdisky/lenjz_jc
+		n_highofe = float(len(o_fe > 0.2))
+		n_lowofe = float(len(o_fe < 0.2))
+		low_high_o_fe = n_highofe/n_lowofe
+		high_total_o_fe = n_highofe/lenjz_jc
+		fof_h = fofdat[7][0][fofindex]
+		fof_fe = fofdat[7][8][fofindex]
+		fof_fe_h = np.log10(fof_fe/fof_h)-solar_fe_h
+		fof_stellar_mass = fofdat[6][fofindex]
+
+		partarray = np.dstack((stack[:,0][stack[:,0] == 4], starpos[:,0], starpos[:,1], starpos[:,2], starvel[:,0], starvel[:,1], starvel[:,2], starmass, fe_h, o_fe, starj_z, starj_c, starjz_jc))[0]
+		fofarray = np.array((groupnum, fof_stellar_mass, fof_fe_h, low_high_o_fe, high_total_o_fe, jz_jcdiskratio))
+
+		'''Save files'''
+		print "Saving files..."
+		np.save(save_directory + "/aligned_starpos", starpos)
+		np.save(save_directory + "/aligned_velocity", starvel)
+		np.save(save_directory + "/aligned_starmass", starmass)
+		np.save(save_directory + "/aligned_fe_h", fe_h)
+		np.save(save_directory + "/aligned_o_fe", o_fe)
+		np.save(save_directory + "/aligned_jz_jc", np.array([starj_z, starj_c, starjz_jc]))
+		np.save(save_directory + "/aligned_groupnum", groupnum)
+		np.save(save_directory + "/aligned_fof_stellar_mass", fof_stellar_mass)
+		np.save(save_directory + "/aligned_fof_fe_h", fof_fe_h)
+		np.save(save_directory + "/aligned_low_high_o_fe", low_high_o_fe)
+		np.save(save_directory + "/aligned_high_total_o_fe", high_total_o_fe)
+		np.save(save_directory + "/aligned_jz_jcdiskratio", jz_jcdiskratio)
+		print "Files saved."
+
+		return partarray, fofarray
+
+	else:
+		print "Loading existing files..."
+		starpos = np.load(save_directory + "/aligned_starpos.npy")
+		starvel = np.load(save_directory + "/aligned_velocity.npy")
+		starmass = np.load(save_directory + "/aligned_starmass.npy")
+		fe_h = np.load(save_directory + "/aligned_fe_h.npy")
+		o_fe = np.load(save_directory + "/aligned_o_fe.npy")
+		starj_loaded = np.load(save_directory + "/aligned_jz_jc.npy")
+		starj_z = starj_loaded[0]
+		starj_c = starj_loaded[1]
+		starjz_jc = starj_loaded[2]
+		groupnum = np.load(save_directory + "/aligned_groupnum.npy")
+		fof_stellar_mass = np.load(save_directory + "/aligned_fof_stellar_mass.npy")
+		fof_fe_h = np.load(save_directory + "/aligned_fof_fe_h.npy")
+		low_high_o_fe = np.load(save_directory + "/aligned_low_high_o_fe.npy")
+		high_total_o_fe = np.load(save_directory + "/aligned_high_total_o_fe.npy")
+		jz_jcdiskratio = np.load(save_directory + "/aligned_jz_jcdiskratio.npy")
+
+
 	if plot == 'show' or plot == 'save':
 		hist, bins = np.histogram(starjz_jc, bins=100, range=(-2,2))
 		centers = (bins[:-1] + bins[1:]) / 2
@@ -267,19 +358,6 @@ def halo(partstack,fofdat,groupnum, simulation_info, plot=True, partdat_out=Fals
 		if plot == 'save':
 			plttitle = plot_dir + 'FOF'+str(int(groupnum))+'pos.png'
 			plt.savefig(plttitle, format='png', dpi = 1200)
-	
-	stars_h = stack[:,10][stack[:,0] == 4]
-	stars_fe = stack[:,14][stack[:,0] == 4]
-	stars_o = stack[:,13][stack[:,0] == 4]
-	solar_h = 0.706498
-	solar_fe = 0.00110322
-	solar_o = 0.00549262
-	solar_fe_h = np.log10(solar_fe/solar_h)
-	solar_o_fe = np.log10(solar_o/solar_h)-(solar_fe_h)
-	stars_fe_h = np.log10(stars_fe/stars_h)
-	stars_o_fe = np.log10(stars_o/stars_h)-(stars_fe_h)
-	fe_h = np.array([str_fe_h - solar_fe_h for str_fe_h in stars_fe_h])
-	o_fe = np.array([str_o_fe - solar_o_fe for str_o_fe in stars_o_fe])
 
 	if plot == 'show' or plot == 'save':
 		R_pos = starr_xy
@@ -382,13 +460,12 @@ def halo(partstack,fofdat,groupnum, simulation_info, plot=True, partdat_out=Fals
 			plttitle = plot_dir + 'FOF'+str(int(groupnum))+'alphafe.png'
 			plt.savefig(plttitle, format='png', dpi = 1200)
 
-	if plot == 'show' or plot == 'save':
-		
+	if plot == 'show' or plot == 'save':		
 
 		len_zbins = len(radial_fe_h)/len(z_bins)
 		fe_h_hists = []
 		fe_h_centers = []
-		for i in range(0,len(radial_fe_h)):
+		for i in range(0,len(radial_fe_h)):			
 			hist, bins = np.histogram(radial_fe_h[i], bins=15, range=(-3,1.0))
 			rad_feh = radial_fe_h[i]
 			centers = (bins[:-1] + bins[1:]) / 2
@@ -426,40 +503,40 @@ def halo(partstack,fofdat,groupnum, simulation_info, plot=True, partdat_out=Fals
 		if plot == 'show' :
 			plt.show()
 
-	if partdat_out == True and fofdat_out == False:
-		partarray = np.dstack((stack[:,0][stack[:,0] == 4], starpos[:,0], starpos[:,1], starpos[:,2], starvel[:,0], starvel[:,1], starvel[:,2], starmass, fe_h, o_fe, starj_z, starj_c, starjz_jc))[0]
-		return partarray
-	if fofdat_out == True and partdat_out == False:
-		jz_jcdisky = float(len(starjz_jc[(starjz_jc < 1.2) & (starjz_jc > 0.7)]))
-		lenjz_jc = float(len(starjz_jc))
-		jz_jcdiskratio = jz_jcdisky/lenjz_jc
+	# if partdat_out == True and fofdat_out == False:
+	# 	partarray = np.dstack((stack[:,0][stack[:,0] == 4], starpos[:,0], starpos[:,1], starpos[:,2], starvel[:,0], starvel[:,1], starvel[:,2], starmass, fe_h, o_fe, starj_z, starj_c, starjz_jc))[0]
+	# 	return partarray
+	# if fofdat_out == True and partdat_out == False:
+	# 	jz_jcdisky = float(len(starjz_jc[(starjz_jc < 1.2) & (starjz_jc > 0.7)]))
+	# 	lenjz_jc = float(len(starjz_jc))
+	# 	jz_jcdiskratio = jz_jcdisky/lenjz_jc
 		
-		n_highofe = float(len(o_fe[o_fe > 0.2]))
-		n_lowofe = float(len(o_fe[o_fe < 0.2]))
-		low_high_o_fe = n_highofe/n_lowofe
-		high_total_o_fe = n_highofe/lenjz_jc
-		fof_h = fofdat[7][0][fofindex]
-		fof_fe = fofdat[7][8][fofindex]
-		fof_fe_h = np.log10(fof_fe/fof_h)-solar_fe_h
-		fof_stellar_mass = fofdat[6][fofindex]
-		fofarray = np.array([groupnum, fof_stellar_mass, fof_fe_h, low_high_o_fe, high_total_o_fe, jz_jcdiskratio])
-		return fofarray
-	if partdat_out == True and fofdat_out == True:
-		partarray = np.dstack((stack[:,0][stack[:,0] == 4], starpos[:,0], starpos[:,1], starpos[:,2], starvel[:,0], starvel[:,1], starvel[:,2], starmass, fe_h, o_fe, starj_z, starj_c, starjz_jc))[0]
-		jz_jcdisky = float(len(((starjz_jc < 1.2) & (starjz_jc > 0.7))))
-		lenjz_jc = float(len(starjz_jc))
+	# 	n_highofe = float(len(o_fe[o_fe > 0.2]))
+	# 	n_lowofe = float(len(o_fe[o_fe < 0.2]))
+	# 	low_high_o_fe = n_highofe/n_lowofe
+	# 	high_total_o_fe = n_highofe/lenjz_jc
+	# 	fof_h = fofdat[7][0][fofindex]
+	# 	fof_fe = fofdat[7][8][fofindex]
+	# 	fof_fe_h = np.log10(fof_fe/fof_h)-solar_fe_h
+	# 	fof_stellar_mass = fofdat[6][fofindex]
+	# 	fofarray = np.array([groupnum, fof_stellar_mass, fof_fe_h, low_high_o_fe, high_total_o_fe, jz_jcdiskratio])
+	# 	return fofarray
+	# if partdat_out == True and fofdat_out == True:
+	# 	partarray = np.dstack((stack[:,0][stack[:,0] == 4], starpos[:,0], starpos[:,1], starpos[:,2], starvel[:,0], starvel[:,1], starvel[:,2], starmass, fe_h, o_fe, starj_z, starj_c, starjz_jc))[0]
+	# 	jz_jcdisky = float(len(((starjz_jc < 1.2) & (starjz_jc > 0.7))))
+	# 	lenjz_jc = float(len(starjz_jc))
 		
-		jz_jcdiskratio = jz_jcdisky/lenjz_jc
-		n_highofe = float(len(o_fe > 0.2))
-		n_lowofe = float(len(o_fe < 0.2))
-		low_high_o_fe = n_highofe/n_lowofe
-		high_total_o_fe = n_highofe/lenjz_jc
-		fof_h = fofdat[7][0][fofindex]
-		fof_fe = fofdat[7][8][fofindex]
-		fof_fe_h = np.log10(fof_fe/fof_h)-solar_fe_h
-		fof_stellar_mass = fofdat[6][fofindex]
-		fofarray = np.array(groupnum, fof_stellar_mass, fof_fe_h, low_high_o_fe, high_total_o_fe, jz_jcdiskratio)
-		return partarray, fofarray
+	# 	jz_jcdiskratio = jz_jcdisky/lenjz_jc
+	# 	n_highofe = float(len(o_fe > 0.2))
+	# 	n_lowofe = float(len(o_fe < 0.2))
+	# 	low_high_o_fe = n_highofe/n_lowofe
+	# 	high_total_o_fe = n_highofe/lenjz_jc
+	# 	fof_h = fofdat[7][0][fofindex]
+	# 	fof_fe = fofdat[7][8][fofindex]
+	# 	fof_fe_h = np.log10(fof_fe/fof_h)-solar_fe_h
+	# 	fof_stellar_mass = fofdat[6][fofindex]
+	# 	fofarray = np.array(groupnum, fof_stellar_mass, fof_fe_h, low_high_o_fe, high_total_o_fe, jz_jcdiskratio)
+	# 	return partarray, fofarray
 		
 def metallicity_gradient(partstack):
 	print "To do"
