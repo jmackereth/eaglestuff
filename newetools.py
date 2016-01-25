@@ -169,7 +169,7 @@ def loadsim(halonum=72,halofunc=False,returns=False,recalc=False):
 	if halofunc == True:
 		halo(partstack,fofdat,halonum,siminfo)
 
-def halo(partstack,fofdat,groupnum, simulation_info, plot=True, partdat_out=False, fofdat_out=False):
+def halo(partstack,fofdat,groupnum, simulation_info, plot=True, partdat_out=False, fofdat_out=False): #This should probably do all halos, then save them to different file names so they can be loaded individually
 	""" define a central halo using groupnum and see its jz/jc histogram and morphology """
 	recalculate = simulation_info[8]
 	save_directory = simulation_info[9]
@@ -502,41 +502,6 @@ def halo(partstack,fofdat,groupnum, simulation_info, plot=True, partdat_out=Fals
 			plt.savefig(plttitle, format='png', dpi = 1200)
 		if plot == 'show' :
 			plt.show()
-
-	# if partdat_out == True and fofdat_out == False:
-	# 	partarray = np.dstack((stack[:,0][stack[:,0] == 4], starpos[:,0], starpos[:,1], starpos[:,2], starvel[:,0], starvel[:,1], starvel[:,2], starmass, fe_h, o_fe, starj_z, starj_c, starjz_jc))[0]
-	# 	return partarray
-	# if fofdat_out == True and partdat_out == False:
-	# 	jz_jcdisky = float(len(starjz_jc[(starjz_jc < 1.2) & (starjz_jc > 0.7)]))
-	# 	lenjz_jc = float(len(starjz_jc))
-	# 	jz_jcdiskratio = jz_jcdisky/lenjz_jc
-		
-	# 	n_highofe = float(len(o_fe[o_fe > 0.2]))
-	# 	n_lowofe = float(len(o_fe[o_fe < 0.2]))
-	# 	low_high_o_fe = n_highofe/n_lowofe
-	# 	high_total_o_fe = n_highofe/lenjz_jc
-	# 	fof_h = fofdat[7][0][fofindex]
-	# 	fof_fe = fofdat[7][8][fofindex]
-	# 	fof_fe_h = np.log10(fof_fe/fof_h)-solar_fe_h
-	# 	fof_stellar_mass = fofdat[6][fofindex]
-	# 	fofarray = np.array([groupnum, fof_stellar_mass, fof_fe_h, low_high_o_fe, high_total_o_fe, jz_jcdiskratio])
-	# 	return fofarray
-	# if partdat_out == True and fofdat_out == True:
-	# 	partarray = np.dstack((stack[:,0][stack[:,0] == 4], starpos[:,0], starpos[:,1], starpos[:,2], starvel[:,0], starvel[:,1], starvel[:,2], starmass, fe_h, o_fe, starj_z, starj_c, starjz_jc))[0]
-	# 	jz_jcdisky = float(len(((starjz_jc < 1.2) & (starjz_jc > 0.7))))
-	# 	lenjz_jc = float(len(starjz_jc))
-		
-	# 	jz_jcdiskratio = jz_jcdisky/lenjz_jc
-	# 	n_highofe = float(len(o_fe > 0.2))
-	# 	n_lowofe = float(len(o_fe < 0.2))
-	# 	low_high_o_fe = n_highofe/n_lowofe
-	# 	high_total_o_fe = n_highofe/lenjz_jc
-	# 	fof_h = fofdat[7][0][fofindex]
-	# 	fof_fe = fofdat[7][8][fofindex]
-	# 	fof_fe_h = np.log10(fof_fe/fof_h)-solar_fe_h
-	# 	fof_stellar_mass = fofdat[6][fofindex]
-	# 	fofarray = np.array(groupnum, fof_stellar_mass, fof_fe_h, low_high_o_fe, high_total_o_fe, jz_jcdiskratio)
-	# 	return partarray, fofarray
 		
 def metallicity_gradient(partstack):
 	print "To do"
