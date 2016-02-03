@@ -1,5 +1,4 @@
 import matplotlib
-<<<<<<< HEAD
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider
@@ -7,13 +6,6 @@ from matplotlib import colors
 from matplotlib import gridspec
 from scipy.stats import gaussian_kde
 from scipy.optimize import curve_fit
-=======
-#matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-from matplotlib import colors
-from matplotlib import gridspec
-from scipy.stats import gaussian_kde
->>>>>>> 2016jan
 import numpy as np
 import eagle as E
 import os
@@ -29,14 +21,6 @@ default_model = "REFERENCE"
 default_tag = "028_z000p000"
 default_sim = default_dir + default_run + "/" + default_model + "/data"
 
-<<<<<<< HEAD
-=======
-boxsize = E.readAttribute("SUBFIND", default_sim, default_tag, "/Header/BoxSize")
-h = E.readAttribute("SUBFIND", default_sim, default_tag, "/Header/HubbleParam")
-boxsize = boxsize/h
-masstable = E.readAttribute("SUBFIND", default_sim, default_tag, "/Header/MassTable") / h
-
->>>>>>> 2016jan
 work_dir = '/data5/astjmack/'
 plot_dir = work_dir+'fofplots/'
 
@@ -68,17 +52,11 @@ def loadparticles(run=default_run,tag=default_tag,model=default_model,directory=
 	
 	boxsize = E.readAttribute("SUBFIND", sim, tag, "/Header/BoxSize")
 	h = E.readAttribute("SUBFIND", sim, tag, "/Header/HubbleParam")
-<<<<<<< HEAD
 	Omega0 = E.readAttribute("PARTDATA", sim, tag, "/Header/Omega0")
 	OmegaLambda = E.readAttribute("PARTDATA", sim, tag, "/Header/OmegaLambda")
 	boxsize = boxsize/h
 	masstable = E.readAttribute("PARTDATA", sim, tag, "/Header/MassTable") / h
 	simattributes = [run, model,  tag, h, boxsize, masstable, mass_cut, Omega0, OmegaLambda]
-=======
-	boxsize = boxsize/h
-	masstable = E.readAttribute("PARTDATA", sim, tag, "/Header/MassTable") / h
-	simattributes = [run, model,  tag, h, boxsize, masstable, mass_cut]
->>>>>>> 2016jan
 
 	print "Loading FoF Data... "
 	fsid = np.array(E.readArray("SUBFIND_GROUP", sim, tag, "FOF/FirstSubhaloID"))
@@ -128,17 +106,10 @@ def loadparticles(run=default_run,tag=default_tag,model=default_model,directory=
 			      E.readArray("PARTDATA", sim, tag, "/PartType4/Coordinates")[type4mask],
 			      E.readArray("PARTDATA", sim, tag, "/PartType5/Coordinates")[type5mask]] )
 	print "Loading particle masses..."
-<<<<<<< HEAD
 	mass_type = np.array( [(E.readArray("PARTDATA", sim, tag, "/PartType0/Mass")[type0mask]*1e10), 
 			       (np.ones(len(pos_type[1]))*masstable[1]*1e10) , 
 			       (E.readArray("PARTDATA", sim, tag, "/PartType4/Mass")[type4mask]*1e10),
 			       (E.readArray("PARTDATA", sim, tag, "/PartType5/Mass")[type5mask]*1e10)])
-=======
-	mass_type = np.array( [E.readArray("PARTDATA", sim, tag, "/PartType0/Mass")[type0mask], 
-			       (np.ones(len(pos_type[1]))*masstable[1]) , 
-			       E.readArray("PARTDATA", sim, tag, "/PartType4/Mass")[type4mask],
-			       E.readArray("PARTDATA", sim, tag, "/PartType5/Mass")[type5mask]])
->>>>>>> 2016jan
 	print "Loading particle velocities..."
 	vel_type = np.array( [E.readArray("PARTDATA", sim, tag, "/PartType0/Velocity")[type0mask], 
 			      E.readArray("PARTDATA", sim, tag, "/PartType1/Velocity")[type1mask],	
@@ -154,11 +125,8 @@ def loadparticles(run=default_run,tag=default_tag,model=default_model,directory=
 								  E.readArray("PARTDATA", sim, tag, "/PartType4/SmoothedElementAbundance/Magnesium")[type4mask], 
 								  E.readArray("PARTDATA", sim, tag, "/PartType4/SmoothedElementAbundance/Silicon")[type4mask], 
 								  E.readArray("PARTDATA", sim, tag, "/PartType4/SmoothedElementAbundance/Iron")[type4mask]])
-<<<<<<< HEAD
 	print "Loading Star formation expansion factors..."
 	starformtime = np.array(E.readArray("PARTDATA", sim, tag, "/PartType4/StellarFormationTime")[type4mask])
-=======
->>>>>>> 2016jan
 	print "Done loading."
 	
 	print "Making Particle Stack..."
@@ -184,17 +152,11 @@ def loadparticles(run=default_run,tag=default_tag,model=default_model,directory=
 	del vel_type
 	masses = np.hstack((mass_type[0], mass_type[1], mass_type[2], mass_type[3]))
 	del mass_type
-<<<<<<< HEAD
 	formtimes = np.hstack((np.zeros(groupnumtypelens[0]), np.zeros(groupnumtypelens[1]), starformtime, np.zeros(groupnumtypelens[3])))
 	del starformtime
 	print 'STAAAAAACK!'
 	#print '%s %s %s %s %s %s %s' %(types.shape, groupnums.shape, subgroupnums.shape,  positions.shape, velocities.shape, abunds.shape, masses.shape)
 	partarray = np.dstack((types,groupnums,subgroupnums,positions[0],positions[1], positions[2],velocities[0],velocities[1], velocities[2], masses, abunds[0], abunds[1], abunds[2], abunds[3], abunds[4], abunds[5], abunds[6], abunds[7], abunds[8], formtimes))
-=======
-	print 'STAAAAAACK!'
-	print '%s %s %s %s %s %s %s' %(types.shape, groupnums.shape, subgroupnums.shape,  positions.shape, velocities.shape, abunds.shape, masses.shape)
-	partarray = np.dstack((types,groupnums,subgroupnums,positions[0],positions[1], positions[2],velocities[0],velocities[1], velocities[2], masses, abunds[0], abunds[1], abunds[2], abunds[3], abunds[4], abunds[5], abunds[6], abunds[7], abunds[8]))
->>>>>>> 2016jan
 	partarray = partarray[0]
 	
 	
@@ -202,23 +164,7 @@ def loadparticles(run=default_run,tag=default_tag,model=default_model,directory=
 	
 	return partarray, fofarray, simattributes
 
-<<<<<<< HEAD
 
-=======
-class Simulation(object):
-	def __init__(self, run=default_run,tag=default_tag,model=default_model,directory=default_dir, mass_cut=[4e10,9e10]):
-		self.run = run
-		self.tag = tag
-		self.model = model
-		self.directory = directory
-		self.mass_cut = mass_cut
-		self.particlestack = []
-		self.fofstack = []
-		self.simattributes = []
-	
-	def load(self):
-		 self.particlestack, self.fofstack, self.simattributes = loadparticles(run = self.run, tag = self.tag, model = self.model, directory = self.directory, mass_cut=self.mass_cut)
->>>>>>> 2016jan
 		
 def halo(partstack,fofdat,simattributes,groupnum):
 	""" define a central halo using groupnum and see its jz/jc histogram and morphology """
@@ -259,11 +205,7 @@ def halo(partstack,fofdat,simattributes,groupnum):
 	starpos = np.array([np.matmul(transform,starpos[i].T) for i in range(0,len(starpos))])[:,0]
 	starvel = np.array([np.matmul(transform,starvel[i].T) for i in range(0,len(starvel))])[:,0]
 	starr_xy = np.linalg.norm(np.dstack((starpos[:,0],starpos[:,1]))[0], axis = 1)
-<<<<<<< HEAD
 	G = 4.302e-9
-=======
-	G = 4.302e2
->>>>>>> 2016jan
 	starv_c = np.sqrt((G*starinnermass)/starr_xy)
 	massvel = np.array([starvel[i]*starmass[i] for i in range(0,len(starvel))])
 	starj = np.array([np.cross(starp,starv) for starp,starv in zip(starpos,massvel)])
@@ -276,11 +218,7 @@ def halo(partstack,fofdat,simattributes,groupnum):
 	print 'aligned!     angular momentum:'+str(tot_ang_mom)
 	starj_z = starjspec[:,2]
 	starj_c = starv_c*starr_xy
-<<<<<<< HEAD
 	starjz_jc = (starj_z/starj_c)
-=======
-	starjz_jc = (starj_z/starj_c)/0.5
->>>>>>> 2016jan
 	
 	print 'calculating abundance ratios...'
 	starmass = stack[:,9][stack[:,0] == 4]
@@ -296,7 +234,6 @@ def halo(partstack,fofdat,simattributes,groupnum):
 	solar_h = 0.706498
 	solar_fe = 0.00110322
 	solar_o = 0.00549262
-<<<<<<< HEAD
 	solar_si = 0.000682587
 	solar_mg = 0.000590706
 	solar_fe_h = np.log10(solar_fe/solar_h)
@@ -304,10 +241,6 @@ def halo(partstack,fofdat,simattributes,groupnum):
 	solar_mg_fe = np.log10(solar_mg/solar_h)-(solar_fe_h)
 	solar_si_fe = np.log10(solar_si/solar_h)-(solar_fe_h)
 	solar_a_fe = np.log10(((solar_o+solar_si+solar_mg)/3)/solar_h)-(solar_fe_h)
-=======
-	solar_fe_h = np.log10(solar_fe/solar_h)
-	solar_o_fe = np.log10(solar_o/solar_h)-(solar_fe_h)
->>>>>>> 2016jan
 	stars_fe_h = np.log10(stars_fe/stars_h)
 	stars_c_fe = np.log10(stars_c/stars_h)-(stars_fe_h)
 	stars_n_fe = np.log10(stars_n/stars_h)-(stars_fe_h)
@@ -315,14 +248,9 @@ def halo(partstack,fofdat,simattributes,groupnum):
 	stars_ne_fe = np.log10(stars_ne/stars_h)-(stars_fe_h)
 	stars_mg_fe = np.log10(stars_mg/stars_h)-(stars_fe_h)
 	stars_si_fe = np.log10(stars_si/stars_h)-(stars_fe_h)
-<<<<<<< HEAD
 	stars_a_fe = np.log10(((stars_o+stars_si+stars_mg)/3)/stars_h)-(stars_fe_h)
 	fe_h = np.array([str_fe_h - solar_fe_h for str_fe_h in stars_fe_h])
 	a_fe = np.array([str_si_fe - solar_si_fe for str_si_fe in stars_si_fe])
-=======
-	fe_h = np.array([str_fe_h - solar_fe_h for str_fe_h in stars_fe_h])
-	o_fe = np.array([str_o_fe - solar_o_fe for str_o_fe in stars_o_fe])
->>>>>>> 2016jan
 	
 	print 'Calculating Global Properties...'
 	jz_jcdisky = float(len(starjz_jc[(starjz_jc < 1.2) & (starjz_jc > 0.7)]))
@@ -337,11 +265,7 @@ def halo(partstack,fofdat,simattributes,groupnum):
 			bin_mask = [(np.abs(starr_xy) > rad_bins[i]) & (np.abs(starr_xy) < rad_bins[i+1])]
 			bincenter = rad_bins[i]+((rad_bins[i+1]-rad_bins[i])/2)
 			fe_h_bin = fe_h[bin_mask]
-<<<<<<< HEAD
 			a_fe_bin = a_fe[bin_mask]
-=======
-			a_fe_bin = o_fe[bin_mask]
->>>>>>> 2016jan
 			bincenters.append(bincenter)
 			radial_fe_h.append(fe_h_bin)
 	fe_h_av = []
@@ -352,22 +276,14 @@ def halo(partstack,fofdat,simattributes,groupnum):
 	fe_h_grad = fit[0]
 	z = np.poly1d(fit)
 	newx = np.arange(bincenters[0], bincenters[-1], 0.001)
-<<<<<<< HEAD
 	n_highafe = float(len(a_fe[a_fe > 0.2]))
 	n_lowafe = float(len(a_fe[a_fe < 0.2]))
 	low_high_a_fe = n_highafe/n_lowafe
 	high_total_a_fe = n_highafe/lenjz_jc
-=======
-	n_highofe = float(len(o_fe[o_fe > 0.2]))
-	n_lowofe = float(len(o_fe[o_fe < 0.2]))
-	low_high_o_fe = n_highofe/n_lowofe
-	high_total_o_fe = n_highofe/lenjz_jc
->>>>>>> 2016jan
 	fof_h = fofdat[7][0][fofindex]
 	fof_fe = fofdat[7][8][fofindex]
 	fof_fe_h = np.log10(fof_fe/fof_h)-solar_fe_h
 	fof_stellar_mass = fofdat[6][fofindex]
-<<<<<<< HEAD
 	hist, bins = np.histogram(np.abs(starpos[:,0]), bins=100, range=(0,0.06))
 	centers = (bins[:-1] + bins[1:]) / 2
 	hist = hist
@@ -396,15 +312,6 @@ def halo(partstack,fofdat,simattributes,groupnum):
 def savehaloarrays(partarray, fofarray, simattributes, directory=work_dir):
 	run, model,  tag, h, boxsize, masstable, mass_cut, Omega0, OmegaLambda = simattributes
 	groupnum, fof_stellar_mass, fof_fe_h, low_high_a_fe, high_total_a_fe, jz_jcdiskratio, fe_h_grad, r200, r_e, sersic_index = fofarray
-=======
-	fofarray = np.array([groupnum, fof_stellar_mass, fof_fe_h, low_high_o_fe, high_total_o_fe, jz_jcdiskratio, fe_h_grad, r200])
-	partarray = np.dstack((stack[:,0][stack[:,0] == 4], starpos[:,0], starpos[:,1], starpos[:,2], starvel[:,0], starvel[:,1], starvel[:,2], starmass, fe_h, o_fe, starj_z, starj_c, starjz_jc, stars_h, stars_he, stars_c, stars_n, stars_o, stars_ne, stars_mg, stars_si, stars_fe))[0]
-	return partarray, fofarray
-
-def savehaloarrays(partarray, fofarray, simattributes, directory=work_dir):
-	run, model,  tag, h, boxsize, masstable, mass_cut = simattributes
-	groupnum, fof_stellar_mass, fof_fe_h, low_high_o_fe, high_total_o_fe, jz_jcdiskratio, fe_h_grad, r200 = fofarray
->>>>>>> 2016jan
 	stack = partarray
 	subfolder = 'savedhalos/%s/%s/%s/' %(run, model, tag)
 	filename = directory+subfolder+run+'_'+model+'_'+tag+'_FOF'+str(int(groupnum))+'.hdf5'
@@ -419,7 +326,6 @@ def savehaloarrays(partarray, fofarray, simattributes, directory=work_dir):
 	h_data = attrib_grp.create_dataset('h', data=h)
 	boxsize_data = attrib_grp.create_dataset('boxsize', data=boxsize)
 	masstable = attrib_grp.create_dataset('masstable', data=masstable)
-<<<<<<< HEAD
 	mass_cut = attrib_grp.create_dataset('mass_cut', data=mass_cut)
 	Om0 = attrib_grp.create_dataset('Omega0', data=Omega0)
 	OLambda = attrib_grp.create_dataset('OmegaLambda', data=OmegaLambda)
@@ -437,33 +343,16 @@ def savehaloarrays(partarray, fofarray, simattributes, directory=work_dir):
 	abundances = stack[:,13:22]
 	startype = stars_grp.create_dataset('type', data=stack[:,0])
 	
-=======
-	fofgnum = fof_grp.create_dataset('groupnum', data=groupnum)
-	fofmass = fof_grp.create_dataset('stellarmass', data=fof_stellar_mass)
-	foffeh = fof_grp.create_dataset('stellar_fe_h', data=fof_fe_h)
-	highofepercent = fof_grp.create_dataset('percenthigh_o_fe', data=high_total_o_fe)
-	jz_jcratio = fof_grp.create_dataset('ratio_jz_jc_sim1', data=jz_jcdiskratio)
-	fe_h_grad = fof_grp.create_dataset('fe_h_gradient', data=fe_h_grad)
-	abundances = stack[:,13:22]
-	stargnum = stars_grp.create_dataset('groupnum', data=stack[:,0])
->>>>>>> 2016jan
 	starpos = stars_grp.create_dataset('position', data=stack[:,1:4])
 	starvel = stars_grp.create_dataset('velocity', data=stack[:,4:7])
 	mass = stars_grp.create_dataset('mass', data=stack[:,7])
 	starfe_h = stars_grp.create_dataset('fe_h', data=stack[:,8])
-<<<<<<< HEAD
 	staro_fe = stars_grp.create_dataset('a_fe', data=stack[:,9])
-=======
-	staro_fe = stars_grp.create_dataset('o_fe', data=stack[:,9])
->>>>>>> 2016jan
 	star_abunds = stars_grp.create_dataset('abundances', data=abundances)
 	star_jz = stars_grp.create_dataset('jz', data=stack[:,10])
 	star_jc = stars_grp.create_dataset('jc', data=stack[:,11])
 	star_jz_jc = stars_grp.create_dataset('jz_jc', data=stack[:,12])
-<<<<<<< HEAD
 	star_age = stars_grp.create_dataset('age', data=stack[:,22])
-=======
->>>>>>> 2016jan
 	f.close()
 	
 def correctwrap(rel_pos):
@@ -484,7 +373,6 @@ def correctwrap(rel_pos):
 				rel_pos[i][2] = rel_pos[i][2] + boxsize
 			else:
 				rel_pos[i][2] = rel_pos[i][2] - boxsize
-<<<<<<< HEAD
 	return np.array(rel_pos)
 
 class Simulation(object):
@@ -528,20 +416,6 @@ class Halo(object):
 
 	def image(self, my_clim = (0,150), set_clim=False, save = False):
 
-=======
-	return np.array(rel_pos)	
-
-class Halo(object):
-	def __init__(self, groupnumber, simobject):
-		stack = simobject.particlestack
-		fofdat = simobject.fofstack
-		self.simattributes = simobject.simattributes	
-		self.groupnumber = groupnumber
-		self.particles, self.fof = halo(stack, fofdat, self.simattributes, self.groupnumber)
-
-	
-	def image(self, my_clim = (0,150), save = False):
->>>>>>> 2016jan
 		x = self.particles[:,1]
 		y = self.particles[:,2]
 		z = self.particles[:,3]
@@ -554,7 +428,6 @@ class Halo(object):
 		my_cmap.set_under('w')
 		ybins = np.arange(-0.06, 0.06, 0.001)
 		xbins = np.arange(-0.06, 0.06, 0.001)
-<<<<<<< HEAD
 		hist, bins = np.histogram(np.abs(x), bins=100, range=(0,0.06))
 		hist = np.log10(hist)
 		centers = np.log10((bins[:-1] + bins[1:]) / 2)
@@ -564,30 +437,17 @@ class Halo(object):
 		ax2 = fig.add_subplot(gs[0,1])
 		H, xedges, yedges = np.histogram2d(y,x,bins=(ybins,xbins))
 		im2 = ax2.imshow(H, extent=[-0.06,0.06,-0.06,0.06], interpolation='nearest', origin='lower', aspect='auto',cmap=my_cmap, vmin=0.1, clim=my_clim)
-=======
-		gs = gridspec.GridSpec(2,2)
-		ax1 = fig.add_subplot(gs[0,0], projection='3d')
-		ax1.scatter(x,y,z, s=starmass+5)
-		ax2 = fig.add_subplot(gs[0,1])
-		H, xedges, yedges = np.histogram2d(y,x,bins=(ybins,xbins))
-		ax2.imshow(H, extent=[-0.06,0.06,-0.06,0.06], interpolation='nearest', origin='lower', aspect='auto',cmap=my_cmap, vmin=0.1, clim=my_clim)
->>>>>>> 2016jan
 		#ax2.scatter(x,y, s=starmass+10)
 		ax2.set_xlabel(r'$x[Mpc]$')
 		ax2.set_ylabel(r'$y[Mpc]$')
 		ax3 = fig.add_subplot(gs[1,0])
 		H, xedges, yedges = np.histogram2d(z,x,bins=(ybins,xbins))
-<<<<<<< HEAD
 		im3 = ax3.imshow(H, extent=[-0.06,0.06,-0.06,0.06], interpolation='nearest', origin='lower', aspect='auto',cmap=my_cmap, vmin=0.1, clim=my_clim)
-=======
-		ax3.imshow(H, extent=[-0.06,0.06,-0.06,0.06], interpolation='nearest', origin='lower', aspect='auto',cmap=my_cmap, vmin=0.1, clim=my_clim)
->>>>>>> 2016jan
 		#ax3.scatter(x,z, s=starmass+10)
 		ax3.set_xlabel(r'$x[Mpc]$')
 		ax3.set_ylabel(r'$z[Mpc]$')
 		ax4 = fig.add_subplot(gs[1,1])
 		H, xedges, yedges = np.histogram2d(z,y,bins=(ybins,xbins))
-<<<<<<< HEAD
 		im4 = ax4.imshow(H, extent=[-0.06,0.06,-0.06,0.06], interpolation='nearest', origin='lower', aspect='auto',cmap=my_cmap, vmin=0.1, clim=my_clim)
 		#ax4.scatter(y,z, s=starmass+10)
 		ax4.set_xlabel(r'$y[Mpc]$')
@@ -612,17 +472,6 @@ class Halo(object):
 
 		if save == True:
 			plttitle = plot_dir+self.simattributes[0]+'_'+self.simattributes[1]+'/' + 'FOF'+str(int(self.groupnumber))+'pos.png'
-=======
-		ax4.imshow(H, extent=[-0.06,0.06,-0.06,0.06], interpolation='nearest', origin='lower', aspect='auto',cmap=my_cmap, vmin=0.1, clim=my_clim)
-		#ax4.scatter(y,z, s=starmass+10)
-		ax4.set_xlabel(r'$y[Mpc]$')
-		ax4.set_ylabel(r'$z[Mpc]$')
-		fig.subplots_adjust(hspace=0.40, wspace=0.40, right=0.95, top=0.95)
-		fof = "FOF "+ str(int(self.groupnumber))
-		fig.text(0.5, 0.96, fof)
-		if save == True:
-			plttitle = plot_dir + 'FOF'+str(int(self.groupnumber))+'pos.png'
->>>>>>> 2016jan
 			plt.savefig(plttitle, format='png', dpi = 1200)
 			plt.close(fig)
 		if save != True:
@@ -644,21 +493,12 @@ class Halo(object):
 		ax[0].plot(centers,hist)
 		ax[0].set_ylabel(r'$N/N*$')
 		ax[0].set_xlabel(r'$j_z / j_c$')
-<<<<<<< HEAD
 		ax[0].set_xlim(-2,2)
 		ax[1].imshow(H, extent =[0,0.05,-2,2], interpolation='nearest', origin='lower', aspect='auto',cmap=my_cmap, vmin=0.1)
 		ax[1].set_xlabel(r'$R$ $[Mpc]$')
 		ax[1].set_ylabel(r'$j_z / j_c$')
 		if save == True:
 			plttitle = plot_dir+self.simattributes[0]+'_'+self.simattributes[1]+'/' + 'FOF'+str(int(self.groupnumber))+'jzjc.png'
-=======
-		ax[0].set_xlim(-3,3)
-		ax[1].imshow(H, extent =[0,0.15*r200,-3,3], interpolation='nearest', origin='lower', aspect='auto',cmap=my_cmap, vmin=0.1)
-		ax[1].set_xlabel(r'$R$ $[Mpc]$')
-		ax[1].set_ylabel(r'$j_z / j_c$')
-		if save == True:
-			plttitle = plot_dir + 'FOF'+str(int(groupnum))+'jzjc.png'
->>>>>>> 2016jan
 			plt.savefig(plttitle, format='png', dpi = 1200)
 			plt.close(fig)
 		if save != True:
@@ -688,20 +528,14 @@ class Halo(object):
 				a_fe_bin = a_fe_zbin[bin_mask]
 				radial_fe_h.append(fe_h_bin)
 				radial_a_fe.append(a_fe_bin)
-<<<<<<< HEAD
 		xbins = np.linspace(-2, 1, 40)
 		ybins = np.linspace(-0.1,0.6, 40)
-=======
-		xbins = np.linspace(-3, 1, 40)
-		ybins = np.linspace(-1.5,1.5, 40)
->>>>>>> 2016jan
 		my_cmap = matplotlib.cm.get_cmap('jet')
 		my_cmap.set_under('w')
 		#produce plot
 		params = {'axes.labelsize': 14, 'xtick.labelsize': 8, 'ytick.labelsize': 8, 'text.usetex': True, 'lines.linewidth' : 2, 'axes.titlesize' : 6}
 		plt.rcParams.update(params)
 		f, ((ax1,ax2,ax3,ax4,ax5,ax6),(ax7,ax8,ax9,ax10,ax11,ax12),(ax13,ax14,ax15,ax16,ax17,ax18)) = plt.subplots(3,6,sharey='row', sharex='row')
-<<<<<<< HEAD
 		my_extent = [-2,1,-0.1,0.6]
 		aspect = 'auto'
 		H, xedges, yedges = np.histogram2d(radial_a_fe[0],radial_fe_h[0],bins=(ybins,xbins))
@@ -743,47 +577,6 @@ class Halo(object):
 		ax1.set_ylabel(r'$[\alpha/Fe]$')
 		ax7.set_ylabel(r'$[\alpha/Fe]$')
 		ax13.set_ylabel(r'$[\alpha/Fe]$')
-=======
-		H, xedges, yedges = np.histogram2d(radial_a_fe[0],radial_fe_h[0],bins=(ybins,xbins))
-		ax13.imshow(H, extent=[-3,1,-1.5,1.5], interpolation='nearest', origin='lower',aspect=3, cmap=my_cmap, vmin=0.1)
-		H, xedges, yedges = np.histogram2d(radial_a_fe[1],radial_fe_h[1],bins=(ybins,xbins))
-		ax14.imshow(H, extent=[-3,1,-1.5,1.5], interpolation='nearest', origin='lower',aspect=3, cmap=my_cmap, vmin=0.1)
-		H, xedges, yedges = np.histogram2d(radial_a_fe[2],radial_fe_h[2],bins=(ybins,xbins))
-		ax15.imshow(H, extent=[-3,1,-1.5,1.5], interpolation='nearest', origin='lower',aspect=3, cmap=my_cmap, vmin=0.1)
-		H, xedges, yedges = np.histogram2d(radial_a_fe[3],radial_fe_h[3],bins=(ybins,xbins))
-		ax16.imshow(H, extent=[-3,1,-1.5,1.5], interpolation='nearest', origin='lower',aspect=3, cmap=my_cmap, vmin=0.1)
-		H, xedges, yedges = np.histogram2d(radial_a_fe[4],radial_fe_h[4],bins=(ybins,xbins))
-		ax17.imshow(H, extent=[-3,1,-1.5,1.5], interpolation='nearest', origin='lower',aspect=3, cmap=my_cmap, vmin=0.1)
-		H, xedges, yedges = np.histogram2d(radial_a_fe[5],radial_fe_h[5],bins=(ybins,xbins))
-		ax18.imshow(H, extent=[-3,1,-1.5,1.5], interpolation='nearest', origin='lower',aspect=3, cmap=my_cmap, vmin=0.1)
-		H, xedges, yedges = np.histogram2d(radial_a_fe[6],radial_fe_h[6],bins=(ybins,xbins))
-		ax7.imshow(H, extent=[-3,1,-1.5,1.5], interpolation='nearest', origin='lower',aspect=3, cmap=my_cmap, vmin=0.1)
-		H, xedges, yedges = np.histogram2d(radial_a_fe[7],radial_fe_h[7],bins=(ybins,xbins))
-		ax8.imshow(H, extent=[-3,1,-1.5,1.5], interpolation='nearest', origin='lower',aspect=3, cmap=my_cmap, vmin=0.1)
-		H, xedges, yedges = np.histogram2d(radial_a_fe[8],radial_fe_h[8],bins=(ybins,xbins))
-		ax9.imshow(H, extent=[-3,1,-1.5,1.5], interpolation='nearest', origin='lower',aspect=3, cmap=my_cmap, vmin=0.1)
-		H, xedges, yedges = np.histogram2d(radial_a_fe[9],radial_fe_h[9],bins=(ybins,xbins))
-		ax10.imshow(H, extent=[-3,1,-1.5,1.5], interpolation='nearest', origin='lower',aspect=3, cmap=my_cmap, vmin=0.1)
-		H, xedges, yedges = np.histogram2d(radial_a_fe[10],radial_fe_h[10],bins=(ybins,xbins))
-		ax11.imshow(H, extent=[-3,1,-1.5,1.5], interpolation='nearest', origin='lower',aspect=3, cmap=my_cmap, vmin=0.1)
-		H, xedges, yedges = np.histogram2d(radial_a_fe[11],radial_fe_h[11],bins=(ybins,xbins))
-		ax12.imshow(H, extent=[-3,1,-1.5,1.5], interpolation='nearest', origin='lower',aspect=3, cmap=my_cmap, vmin=0.1)
-		H, xedges, yedges = np.histogram2d(radial_a_fe[12],radial_fe_h[12],bins=(ybins,xbins))
-		ax1.imshow(H, extent=[-3,1,-1.5,1.5], interpolation='nearest', origin='lower',aspect=3, cmap=my_cmap, vmin=0.1)
-		H, xedges, yedges = np.histogram2d(radial_a_fe[13],radial_fe_h[13],bins=(ybins,xbins))
-		ax2.imshow(H, extent=[-3,1,-1.5,1.5], interpolation='nearest', origin='lower',aspect=3, cmap=my_cmap, vmin=0.1)
-		H, xedges, yedges = np.histogram2d(radial_a_fe[14],radial_fe_h[14],bins=(ybins,xbins))
-		ax3.imshow(H, extent=[-3,1,-1.5,1.5], interpolation='nearest', origin='lower',aspect=3, cmap=my_cmap, vmin=0.1)
-		H, xedges, yedges = np.histogram2d(radial_a_fe[15],radial_fe_h[15],bins=(ybins,xbins))
-		ax4.imshow(H, extent=[-3,1,-1.5,1.5], interpolation='nearest', origin='lower',aspect=3, cmap=my_cmap, vmin=0.1)	
-		H, xedges, yedges = np.histogram2d(radial_a_fe[16],radial_fe_h[16],bins=(ybins,xbins))
-		ax5.imshow(H, extent=[-3,1,-1.5,1.5], interpolation='nearest', origin='lower',aspect=3, cmap=my_cmap, vmin=0.1)
-		H, xedges, yedges = np.histogram2d(radial_a_fe[17],radial_fe_h[17],bins=(ybins,xbins))
-		ax6.imshow(H, extent=[-3,1,-1.5,1.5], interpolation='nearest', origin='lower',aspect=3, cmap=my_cmap, vmin=0.1)
-		ax1.set_ylabel(r'$[O/Fe]$')
-		ax7.set_ylabel(r'$[O/Fe]$')
-		ax13.set_ylabel(r'$[O/Fe]$')
->>>>>>> 2016jan
 		ax13.set_xlabel(r'$[Fe/H]$')
 		ax14.set_xlabel(r'$[Fe/H]$')
 		ax15.set_xlabel(r'$[Fe/H]$')
@@ -796,7 +589,6 @@ class Halo(object):
 			axes[i].set_title(labels[i])
 			axes[i+6].set_title(labels[i])
 			axes[i+12].set_title(labels[i])
-<<<<<<< HEAD
 		'''
 		for ax in axes:
 			ax.set_ylim([-0.1,0.6])
@@ -804,27 +596,14 @@ class Halo(object):
 			ax.yaxis.set_ticks(np.arange(-0.6,1.2,0.2))
 			ax.xaxis.set_ticks(np.arange(-2.0,2.0,1.0))
 		'''
-=======
-		for ax in axes:
-			ax.set_ylim([-0.6,1.0])
-			ax.set_xlim([-2.5,1.0])
-			ax.yaxis.set_ticks(np.arange(-0.6,1.2,0.2))
-			ax.xaxis.set_ticks(np.arange(-2.0,2.0,1.0))
->>>>>>> 2016jan
 		f.subplots_adjust(hspace=0.40, wspace=0, left=0.08, right=0.97, top=0.92, bottom=0.08)
 		f.text(0.45, 0.34, r'$'+str(z_bins[0]*1000)+' < |z| < '+str(z_bins[1]*1000)+'$ $Kpc$', fontsize=9)
 		f.text(0.45, 0.65, r'$'+str(z_bins[1]*1000)+' < |z| < '+str(z_bins[2]*1000)+'$ $Kpc$', fontsize=9)
 		f.text(0.45, 0.96, r'$'+str(z_bins[2]*1000)+' < |z| < '+str(z_bins[3]*1000)+'$ $Kpc$', fontsize=9)
 		#f.set_size_inches(12,6, forward=True)
-<<<<<<< HEAD
 	
 		if save == True:
 			plttitle = plot_dir+self.simattributes[0]+'_'+self.simattributes[1]+'/' + 'FOF'+str(int(self.groupnumber))+'alphafe.png'
-=======
-		ax13.legend()
-		if save == True:
-			plttitle = plot_dir + 'FOF'+str(int(groupnum))+'alphafe.png'
->>>>>>> 2016jan
 			plt.savefig(plttitle, format='png', dpi = 1200)
 			plt.close(f)
 		if save != True:
@@ -868,11 +647,6 @@ class Halo(object):
 		plt.rcParams.update(params)
 		fig, ax = plt.subplots(3,1, sharex=True)
 		
-<<<<<<< HEAD
-=======
-		cmap = colors.LinearSegmentedColormap.from_list('sSFR',['red','green'],256)
-		
->>>>>>> 2016jan
 		for i in range(0,(len(radial_fe_h)/3)):
 			ax[2].plot(fe_h_centers[i], fe_h_hists[i], label=labels[i])
 			ax[2].set_xlabel(r'$[Fe/H]$')
@@ -890,16 +664,11 @@ class Halo(object):
 			ax[0].set_title(r'$'+str(z_bins[2]*1000)+' < |z| < '+str(z_bins[3]*1000)+'$ $Kpc$')
 			ax[0].legend(loc=2, fontsize='x-small', frameon=False, shadow=False)
 		if save == True:
-<<<<<<< HEAD
 			plttitle = plot_dir+self.simattributes[0]+'_'+self.simattributes[1]+'/' + 'FOF'+str(int(self.groupnumber))+'mdf.png'
-=======
-			plttitle = plot_dir + 'FOF'+str(int(groupnum))+'mdf.png'
->>>>>>> 2016jan
 			plt.savefig(plttitle, format='png', dpi = 1200)
 			plt.close(fig)
 		if save != True :
 			plt.show()
-<<<<<<< HEAD
 	
 	def agescaleheight(self, rad_cut = [0.003,0.015], jzjc_cut=[0.8,1.2], save=False):
 		part = self.particles
@@ -935,9 +704,6 @@ class Halo(object):
 			plt.show()
 
 
-=======
-		
->>>>>>> 2016jan
 	def save(self, directory=work_dir):
 		savehaloarrays(self.particles, self.fof, self.simattributes, directory=directory)
 	
