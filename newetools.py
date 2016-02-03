@@ -11,28 +11,31 @@ import math
 import csv
 import sys
 
-default_run = "L0025N0376"
+default_run = "L0050N0752"
+#L0025N0376 L0050N0752
 default_dir = "/data5/simulations/EAGLE/"
 default_model = "REFERENCE"
 default_tag = "028_z000p000"
 
 default_save_location = "/data5/astswalt/EAGLE/eagletools/data/"
 
-plot_dir='/data5/astjmack/fofplots/'
+#plot_dir='/data5/astjmack/fofplots/'
+plot_dir='/home/astswalt/Documents/Eagle/eaglestuff/Plots' #Test more - wrapping
 verbose_option = False #Sets verbose = True/False for all reading
 
 def select_sim(run=default_run, model=default_model, tag=default_tag, top_directory=default_dir, recalculate=False, save_loc=default_save_location):
 	directory = top_directory + run + "/" + model + "/data"
-	save_directory = save_loc + "/" + run + "/" + model + "/" + tag
+	save_directory = save_loc + run + "/" + model + "/" + tag + "/"
 
 	h = E.readAttribute("SUBFIND", directory, tag, "/Header/HubbleParam")
 	masstable = E.readAttribute("SUBFIND", directory, tag, "/Header/MassTable") / h
 	boxsize = E.readAttribute("SUBFIND", directory, tag, "/Header/BoxSize")
 	boxsize = boxsize/h
 	
+	ensure_dir(save_directory)
 	file_check = len(os.listdir(save_directory))
 	if file_check == 0 or recalculate == True:
-		print "Data will be recalculated."
+		print "Data will be (re)calculated."
 		recalc = True
 	else:
 		print "Data will be loaded from numpy files."
@@ -46,6 +49,7 @@ def ensure_dir(f):
 	""" Ensure a a file exists and if not make the relevant path """
 	d = os.path.dirname(f)
 	if not os.path.exists(d):
+			print "Making path"
 			os.makedirs(d)
 
 abundance_path = "/PartType4/SmoothedElementAbundance/"
@@ -56,32 +60,26 @@ def loadparticles(simulation_info):
 	if recalc == True:
 		print "Loading particle data for %s - %s - %s" %(run,model,tag)
 		sim = directory
-		print "Loading group numbers..." 
 		groupnum_type = np.array( [E.readArray("PARTDATA", sim, tag, "/PartType0/GroupNumber",verbose=verbose_option), 
 			E.readArray("PARTDATA", sim, tag, "/PartType1/GroupNumber",verbose=verbose_option), 
 			E.readArray("PARTDATA", sim, tag, "/PartType4/GroupNumber",verbose=verbose_option), 
 			E.readArray("PARTDATA", sim, tag, "/PartType5/GroupNumber",verbose=verbose_option)] )
-		print "Loading subgroup numbers..."
 		subgroupnum_type = np.array( [E.readArray("PARTDATA", sim, tag, "/PartType0/SubGroupNumber",verbose=verbose_option), 
 			E.readArray("PARTDATA", sim, tag, "/PartType1/SubGroupNumber",verbose=verbose_option), 
 			E.readArray("PARTDATA", sim, tag, "/PartType4/SubGroupNumber",verbose=verbose_option), 
 			E.readArray("PARTDATA", sim, tag, "/PartType5/SubGroupNumber",verbose=verbose_option)] )
-		print "Loading particle coordinates..."
 		pos_type = np.array( [E.readArray("PARTDATA", sim, tag, "/PartType0/Coordinates",verbose=verbose_option), 
 			E.readArray("PARTDATA", sim, tag, "/PartType1/Coordinates",verbose=verbose_option), 
 			E.readArray("PARTDATA", sim, tag, "/PartType4/Coordinates",verbose=verbose_option), 
 			E.readArray("PARTDATA", sim, tag, "/PartType5/Coordinates",verbose=verbose_option)] )
-		print "Loading particle masses..."
 		mass_type = np.array( [E.readArray("PARTDATA", sim, tag, "/PartType0/Mass",verbose=verbose_option), 
 			(np.ones(len(pos_type[1]))*masstable[1]) , 
 			E.readArray("PARTDATA", sim, tag, "/PartType4/Mass",verbose=verbose_option), 
 			E.readArray("PARTDATA", sim, tag, "/PartType5/Mass",verbose=verbose_option)])
-		print "Loading particle velocities..."
 		vel_type = np.array( [E.readArray("PARTDATA", sim, tag, "/PartType0/Velocity",verbose=verbose_option), 
 			E.readArray("PARTDATA", sim, tag, "/PartType1/Velocity",verbose=verbose_option), 
 			E.readArray("PARTDATA", sim, tag, "/PartType4/Velocity",verbose=verbose_option), 
 			E.readArray("PARTDATA", sim, tag, "/PartType5/Velocity",verbose=verbose_option)] )
-		print "Loading particle abundances..."
 		stars_abundances = np.array( [E.readArray("PARTDATA", sim, tag, abundance_path+"Hydrogen",verbose=verbose_option),  
 			E.readArray("PARTDATA", sim, tag, abundance_path+"Helium",verbose=verbose_option), 
 			E.readArray("PARTDATA", sim, tag, abundance_path+"Carbon",verbose=verbose_option), 
@@ -93,6 +91,7 @@ def loadparticles(simulation_info):
 			E.readArray("PARTDATA", sim, tag, abundance_path+"Iron",verbose=verbose_option)])
 		print "Done loading."
 		return np.array([groupnum_type, subgroupnum_type, pos_type, mass_type, vel_type, stars_abundances])
+		groupnum_type, subgroupnum_type, pos_type, mass_type, vel_type, stars_abundances = None, None, None, None, None, None
 	else:
 		print "loadparticles(): No need to load particle data, data will be loaded from file."
 		return 0
@@ -169,7 +168,7 @@ def loadsim(halonum=72,halofunc=False,returns=False,recalc=False):
 	if halofunc == True:
 		halo(partstack,fofdat,halonum,siminfo)
 
-def halo(partstack,fofdat,groupnum, simulation_info, plot=True, partdat_out=False, fofdat_out=False): #This should probably do all halos, then save them to different file names so they can be loaded individually
+def halo(partstack,fofdat, groupnum, simulation_info, plot=True, partdat_out=False, fofdat_out=False): #This should probably do all halos, then save them to different file names so they can be loaded individually
 	""" define a central halo using groupnum and see its jz/jc histogram and morphology """
 	recalculate = simulation_info[8]
 	save_directory = simulation_info[9]
