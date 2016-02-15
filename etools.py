@@ -67,9 +67,7 @@ def loadparticles(run=default_run,tag=default_tag,model=default_model,directory=
 	CoP = np.array(E.readArray("SUBFIND", sim, tag, "/Subhalo/CentreOfPotential"))[fsid]
 	subhalovel = np.array(E.readArray("SUBFIND", sim, tag, "/Subhalo/Velocity"))[fsid]
 	r_200 = np.array(E.readArray("SUBFIND_GROUP", sim, tag, "/FOF/Group_R_Crit200"))
-	print sim, tag
 	m_200 = np.array(E.readArray("SUBFIND_GROUP", sim, tag, "/FOF/Group_M_Crit200")*1e10)
-	print m_200
 	tot_ang_mom = np.array(E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/Spin"))[fsid]
 	stellar_mass = np.array(E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/Mass") * 1e10)[fsid]
 	stellar_abundances = np.array( [ E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Hydrogen")[fsid], E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Helium")[fsid], E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Carbon")[fsid], E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Nitrogen")[fsid], E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Oxygen")[fsid], E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Neon")[fsid], E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Magnesium")[fsid], E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Silicon")[fsid], E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Iron")[fsid]]) 
@@ -77,11 +75,6 @@ def loadparticles(run=default_run,tag=default_tag,model=default_model,directory=
 
 	locs = np.where(((fofarray[8] > mass_cut[0]) & (fofarray[8] < mass_cut[1])))
 	mass_cut_groupnums = fofarray[1][locs]
-	#print len(locs), locs
-	print fofarray[1], fofarray[8],locs
-	print fofarray[1][290], fofarray[8][290]
-	print mass_cut_groupnums
-	print fofarray[8][locs]
 	print "Loading subgroup numbers..."
 	subgroupnum_type = np.array( [E.readArray("PARTDATA", sim, tag, "/PartType0/SubGroupNumber"), 
 				      E.readArray("PARTDATA", sim, tag, "/PartType1/SubGroupNumber"), 
