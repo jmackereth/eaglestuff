@@ -16,13 +16,13 @@ import sys
 import h5py
 import cPickle as pickle
 
-default_run = "L0025N0752"
+default_run = "L0050N0752"
 default_dir = "/data5/simulations/EAGLE/"
-default_model = "RECALIBRATED"
+default_model = "REFERENCE"
 default_tag = "028_z000p000"
 default_sim = default_dir + default_run + "/" + default_model + "/data"
 
-work_dir = '/data5/astjmack/'
+work_dir = '/data5/astjs/'
 plot_dir = work_dir+'fofplots/'
 
 def ensure_dir(f):
@@ -31,7 +31,7 @@ def ensure_dir(f):
 	if not os.path.exists(d):
 			os.makedirs(d)
 
-def loadparticles(run=default_run,tag=default_tag,model=default_model,directory=default_dir, mass_cut=[2e10,8e10]):
+def loadparticles(run=default_run,tag=default_tag,model=default_model,directory=default_dir, mass_cut=[7e11,3e12]):
 	""" 
 	This loads the particle and FoF data (and simulation attributes) for a given simulation , and given halo stellar mass range and returns arrays with that data.
 
@@ -67,12 +67,21 @@ def loadparticles(run=default_run,tag=default_tag,model=default_model,directory=
 	CoP = np.array(E.readArray("SUBFIND", sim, tag, "/Subhalo/CentreOfPotential"))[fsid]
 	subhalovel = np.array(E.readArray("SUBFIND", sim, tag, "/Subhalo/Velocity"))[fsid]
 	r_200 = np.array(E.readArray("SUBFIND_GROUP", sim, tag, "/FOF/Group_R_Crit200"))
+	print sim, tag
+	m_200 = np.array(E.readArray("SUBFIND_GROUP", sim, tag, "/FOF/Group_M_Crit200")*1e10)
+	print m_200
 	tot_ang_mom = np.array(E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/Spin"))[fsid]
 	stellar_mass = np.array(E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/Mass") * 1e10)[fsid]
 	stellar_abundances = np.array( [ E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Hydrogen")[fsid], E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Helium")[fsid], E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Carbon")[fsid], E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Nitrogen")[fsid], E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Oxygen")[fsid], E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Neon")[fsid], E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Magnesium")[fsid], E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Silicon")[fsid], E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Iron")[fsid]]) 
-	fofarray = np.array([fsid,groupnumber,CoP,subhalovel,r_200,tot_ang_mom, stellar_mass, stellar_abundances ])	
+	fofarray = np.array([fsid,groupnumber,CoP,subhalovel,r_200,tot_ang_mom, stellar_mass, stellar_abundances, m_200 ])	
 
-	mass_cut_groupnums = fofarray[1][np.where(((fofarray[6] > mass_cut[0]) & (fofarray[6] < mass_cut[1])))]
+	locs = np.where(((fofarray[8] > mass_cut[0]) & (fofarray[8] < mass_cut[1])))
+	mass_cut_groupnums = fofarray[1][locs]
+	#print len(locs), locs
+	print fofarray[1], fofarray[8],locs
+	print fofarray[1][290], fofarray[8][290]
+	print mass_cut_groupnums
+	print fofarray[8][locs]
 	print "Loading subgroup numbers..."
 	subgroupnum_type = np.array( [E.readArray("PARTDATA", sim, tag, "/PartType0/SubGroupNumber"), 
 				      E.readArray("PARTDATA", sim, tag, "/PartType1/SubGroupNumber"), 
@@ -319,7 +328,6 @@ def halo(partstack,fofdat,simattributes,groupnum, snip=False):
 	starjz_jc = (starj_z/starj_c)
 	kappa = (0.5*starmass*((starj_z/starr_xy)**2))/(0.5*starmass*(np.linalg.norm(starvel, axis=1)**2))
 	if snip == False:
-		print 'calculating abundance ratios...'
 		starmass = stack[:,9][stack[:,0] == 4]
 		stars_h = stack[:,10][stack[:,0] == 4]
 		stars_he =stack[:,11][stack[:,0] == 4]
@@ -364,7 +372,6 @@ def halo(partstack,fofdat,simattributes,groupnum, snip=False):
 		a_fe = omgsi_h - fe_h
 	#a_fe = np.array([str_a_fe - solar_a_fe for str_a_fe in stars_a_fe])
 	
-	print 'Calculating Global Properties...'
 	jz_jcdisky = float(len(starjz_jc[(starjz_jc < 1.2) & (starjz_jc > 0.7)]))
 	lenjz_jc = float(len(starjz_jc))
 	jz_jcdiskratio = jz_jcdisky/lenjz_jc
@@ -492,6 +499,7 @@ def savehaloarrays(partarray, fofarray, simattributes, directory=work_dir):
 	subfolder = 'savedhalos/%s/%s/%s/' %(run, model, tag)
 	filename = directory+subfolder+run+'_'+model+'_'+tag+'_FOF'+str(int(groupnum))+'.hdf5'
 	ensure_dir(directory+subfolder)
+	os.remove(filename)
 	f = h5py.File(filename, 'w')
 	attrib_grp = f.create_group('simattributes')
 	fof_grp = f.create_group('fofdata')
