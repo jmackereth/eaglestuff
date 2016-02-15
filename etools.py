@@ -15,6 +15,7 @@ import csv
 import sys
 import h5py
 import cPickle as pickle
+import glob
 
 default_run = "L0050N0752"
 default_dir = "/data5/simulations/EAGLE/"
@@ -492,7 +493,6 @@ def savehaloarrays(partarray, fofarray, simattributes, directory=work_dir):
 	subfolder = 'savedhalos/%s/%s/%s/' %(run, model, tag)
 	filename = directory+subfolder+run+'_'+model+'_'+tag+'_FOF'+str(int(groupnum))+'.hdf5'
 	ensure_dir(directory+subfolder)
-	os.remove(filename)
 	f = h5py.File(filename, 'w')
 	attrib_grp = f.create_group('simattributes')
 	fof_grp = f.create_group('fofdata')
