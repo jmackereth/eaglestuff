@@ -274,8 +274,6 @@ def halo(partstack,fofdat,simattributes,groupnum, snip=False):
 	""" define a central halo using groupnum and see its jz/jc histogram and morphology """
 	print 'Isolating FoF and Aligning....'
 	#Isolate the desired Group
-<<<<<<< HEAD
-	
 	stack = partstack[(partstack[:,1] == groupnum) & (partstack[:,2] == 0)]
 	if snip==False:
 		fofindex = np.where(fofdat[1] == groupnum)
