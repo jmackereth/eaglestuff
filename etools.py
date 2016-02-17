@@ -78,7 +78,6 @@ def loadparticles(run=default_run,tag=default_tag,model=default_model,directory=
 
 	locs = np.where(((fofarray[8] > mass_cut[0]) & (fofarray[8] < mass_cut[1])))
 	mass_cut_groupnums = fofarray[1][locs]
-
 	print "Loading subgroup numbers..."
 	subgroupnum_type = np.array( [E.readArray("PARTDATA", sim, tag, "/PartType0/SubGroupNumber"), 
 				      E.readArray("PARTDATA", sim, tag, "/PartType1/SubGroupNumber"), 
@@ -284,6 +283,7 @@ def halo(partstack,fofdat,simattributes,groupnum, snip=False):
 		CoP = fofdat[2]
 		r200 = fofdat[4] 
 		subhalovel = fofdat[3]
+	
 	boxsize = simattributes[4]
 	pos = stack[:,3:6]-(CoP-(boxsize/2))
 	pos[:,:3] %= boxsize
@@ -656,7 +656,7 @@ def correctwrap(rel_pos):
 	return np.array(rel_pos)
 
 class Snapshot(object):
-	def __init__(self, run=default_run,tag=default_tag,model=default_model,directory=default_dir, mass_cut=[2e10,7e10]):
+	def __init__(self, run=default_run,tag=default_tag,model=default_model,directory=default_dir, mass_cut=[7e11,3e12]):
 		self.run = run
 		self.tag = tag
 		self.model = model
@@ -665,9 +665,14 @@ class Snapshot(object):
 		self.particlestack = []
 		self.fofstack = []
 		self.simattributes = []
-	
+		
+
 	def load(self):
-		 self.particlestack, self.fofstack, self.simattributes = loadparticles(run = self.run, tag = self.tag, model = self.model, directory = self.directory, mass_cut=self.mass_cut)	
+		self.particlestack, self.fofstack, self.simattributes = loadparticles(run = self.run, tag = self.tag, model = self.model, directory = self.directory, mass_cut=self.mass_cut)
+		self.gnums = self.fofstack[1][np.where((self.fofstack[8] > self.mass_cut[0]) & (self.fofstack[8] < self.mass_cut[1]))]
+
+		
+			
 
 class Snipshot(object):
 	def __init__(self, groupnum, run=default_run,tag=default_tag,model=default_model,directory=default_dir):
