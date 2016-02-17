@@ -306,7 +306,7 @@ def halo(partstack,fofdat,simattributes,groupnum, snip=False):
 	starpos = np.array([np.matmul(transform,starpos[i].T) for i in range(0,len(starpos))])[:,0]
 	starvel = np.array([np.matmul(transform,starvel[i].T) for i in range(0,len(starvel))])[:,0]
 	starr_xy = np.linalg.norm(np.dstack((starpos[:,0],starpos[:,1]))[0], axis = 1)
-	G = 4.302e-9
+	G = 4.302e-9  #Units?
 	starv_c = np.sqrt((G*starinnermass)/starr_xy)
 	massvel = np.array([starvel[i]*starmass[i] for i in range(0,len(starvel))])
 	starj = np.array([np.cross(starp,starv) for starp,starv in zip(starpos,massvel)])
@@ -321,6 +321,9 @@ def halo(partstack,fofdat,simattributes,groupnum, snip=False):
 	starj_c = starv_c*starr_xy
 	starjz_jc = (starj_z/starj_c)
 	kappa = (0.5*starmass*((starj_z/starr_xy)**2))/(0.5*starmass*(np.linalg.norm(starvel, axis=1)**2))
+	star_binding_energy = (0.6 * G * starinnermass**2)/starradii #Should probably not assume spherical potential
+	fof_median_binding_energy = np.median(star_binding_energy)
+
 	if snip == False:
 		starmass = stack[:,9][stack[:,0] == 4]
 		stars_h = stack[:,10][stack[:,0] == 4]
@@ -366,7 +369,7 @@ def halo(partstack,fofdat,simattributes,groupnum, snip=False):
 		a_fe = omgsi_h - fe_h
 	#a_fe = np.array([str_a_fe - solar_a_fe for str_a_fe in stars_a_fe])
 	
-	jz_jcdisky = float(len(starjz_jc[(starjz_jc < 1.2) & (starjz_jc > 0.7)]))
+	jz_jcdisky = float(len(starjz_jc[(starjz_jc > 0.7)]))
 	lenjz_jc = float(len(starjz_jc))
 	jz_jcdiskratio = jz_jcdisky/lenjz_jc
 	if snip == False:
@@ -405,6 +408,7 @@ def halo(partstack,fofdat,simattributes,groupnum, snip=False):
 		hist, bins = np.histogram(np.abs(starpos[:,0]), bins=100, range=(0,0.06))
 		centers = (bins[:-1] + bins[1:]) / 2
 		hist = hist
+
 		def sersic(r, I_0, r_e, n):
 			return I_0 * np.exp(-1*(r/r_e)**(1/n))
 		try:
@@ -412,14 +416,21 @@ def halo(partstack,fofdat,simattributes,groupnum, snip=False):
 		except RuntimeError:
 			print 'WARNING: could not fit sersic profile... returning NaN'
 			popt = [np.nan, np.nan, np.nan]
+
 		r_e = popt[1]
 		sersic_index = popt[2]
 		fe_h_grad = fe_h_grad*r_e
 		formtimes = np.array(stack[:,19][stack[:,0]==4])
 		age = expansion2age(simattributes, formtimes)
 		PIDS = stack[:,20][stack[:,0]==4]
-		fofarray = np.array([groupnum, fof_stellar_mass, fof_fe_h, low_high_a_fe, high_total_a_fe, jz_jcdiskratio, fe_h_grad, r200, r_e, sersic_index])
-		partarray = np.dstack((stack[:,0][stack[:,0] == 4], starpos[:,0], starpos[:,1], starpos[:,2], starvel[:,0], starvel[:,1], starvel[:,2], starmass, fe_h, a_fe, starj_z, starj_c, starjz_jc, stars_h, stars_he, stars_c, stars_n, stars_o, stars_ne, stars_mg, stars_si, stars_fe, age, PIDS, kappa))[0]
+
+		disc_mask = (starjz_jc > 0.7) & (starjz_jc < 5) & (starradii > 0.002) & (starradii < 0.02) & (starpos[:,2] < 0.05) #Check
+		halo_mask = [not i for i in disc_mask] & (star_binding_energy > fof_median_binding_energy) #Find halo stars
+		mask1 = [not i for i in disc_mask]
+
+		fofarray = np.array([groupnum, fof_stellar_mass, fof_fe_h, low_high_a_fe, high_total_a_fe, jz_jcdiskratio, fe_h_grad, r200, r_e, sersic_index, fof_median_binding_energy])
+		partarray = np.dstack((stack[:,0][stack[:,0] == 4], starpos[:,0], starpos[:,1], starpos[:,2], starvel[:,0], starvel[:,1], starvel[:,2], starmass, fe_h, a_fe, starj_z, starj_c, starjz_jc, stars_h, stars_he, stars_c, stars_n, stars_o, stars_ne, stars_mg, stars_si, stars_fe, age, PIDS, kappa, star_binding_energy, halo_mask, disc_mask))[0]
+
 	if snip == True:
 		PIDS = stack[:,10][stack[:,0]==4]
 		def exponential(z, N_0, z_s, n):
@@ -488,7 +499,7 @@ def searchsnipforhalo(haloPIDs, simattributes, snip_tag):
 
 def savehaloarrays(partarray, fofarray, simattributes, directory=work_dir):
 	run, model,  tag, h, boxsize, masstable, mass_cut, Omega0, OmegaLambda, OmegaBaryon, a_0 = simattributes
-	groupnum, fof_stellar_mass, fof_fe_h, low_high_a_fe, high_total_a_fe, jz_jcdiskratio, fe_h_grad, r200, r_e, sersic_index = fofarray
+	groupnum, fof_stellar_mass, fof_fe_h, low_high_a_fe, high_total_a_fe, jz_jcdiskratio, fe_h_grad, r200, r_e, sersic_index, fof_median_binding_energy = fofarray
 	stack = partarray
 	subfolder = 'savedhalos/%s/%s/%s/' %(run, model, tag)
 	filename = directory+subfolder+run+'_'+model+'_'+tag+'_FOF'+str(int(groupnum))+'.hdf5'
@@ -519,6 +530,7 @@ def savehaloarrays(partarray, fofarray, simattributes, directory=work_dir):
 	r_200fof = fof_grp.create_dataset('r200', data=r200)
 	scalelength = fof_grp.create_dataset('scalelength', data=r_e)
 	sersic = fof_grp.create_dataset('sersicindex', data=sersic_index)
+	median_binding_energy = fof_grp.create_dataset('median_binding_energy', data=fof_median_binding_energy)
 
 	abundances = stack[:,13:22]
 	startype = stars_grp.create_dataset('type', data=stack[:,0])
@@ -532,6 +544,9 @@ def savehaloarrays(partarray, fofarray, simattributes, directory=work_dir):
 	star_jc = stars_grp.create_dataset('jc', data=stack[:,11])
 	star_jz_jc = stars_grp.create_dataset('jz_jc', data=stack[:,12])
 	star_age = stars_grp.create_dataset('age', data=stack[:,22])
+	star_binding_energy = stars_grp.create_dataset('binding_energy', data=stack[:,25])
+	halo_mask = stars_grp.create_dataset('halo_mask', data=stack[:,26])
+	disc_mask = stars_grp.create_dataset('disc_mask', data=stack[:,27])
 	f.close()
 	
 def correctwrap(rel_pos):
