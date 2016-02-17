@@ -15,14 +15,15 @@ import csv
 import sys
 import h5py
 import cPickle as pickle
+import glob
 
-default_run = "L0025N0752"
+default_run = "L0050N0752"
 default_dir = "/data5/simulations/EAGLE/"
-default_model = "RECALIBRATED"
+default_model = "REFERENCE"
 default_tag = "028_z000p000"
 default_sim = default_dir + default_run + "/" + default_model + "/data"
 
-work_dir = '/data5/astjmack/'
+work_dir = '/data5/astjs/'
 plot_dir = work_dir+'fofplots/'
 
 def ensure_dir(f):
@@ -31,7 +32,9 @@ def ensure_dir(f):
 	if not os.path.exists(d):
 			os.makedirs(d)
 
-def loadparticles(run=default_run,tag=default_tag,model=default_model,directory=default_dir, mass_cut=[2e10,8e10]):
+
+def loadparticles(run=default_run,tag=default_tag,model=default_model,directory=default_dir, mass_cut=[7e11,3e12]):
+
 	""" 
 	This loads the particle and FoF data (and simulation attributes) for a given simulation , and given halo stellar mass range and returns arrays with that data.
 
@@ -67,12 +70,15 @@ def loadparticles(run=default_run,tag=default_tag,model=default_model,directory=
 	CoP = np.array(E.readArray("SUBFIND", sim, tag, "/Subhalo/CentreOfPotential"))[fsid]
 	subhalovel = np.array(E.readArray("SUBFIND", sim, tag, "/Subhalo/Velocity"))[fsid]
 	r_200 = np.array(E.readArray("SUBFIND_GROUP", sim, tag, "/FOF/Group_R_Crit200"))
+	m_200 = np.array(E.readArray("SUBFIND_GROUP", sim, tag, "/FOF/Group_M_Crit200")*1e10)
 	tot_ang_mom = np.array(E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/Spin"))[fsid]
 	stellar_mass = np.array(E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/Mass") * 1e10)[fsid]
 	stellar_abundances = np.array( [ E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Hydrogen")[fsid], E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Helium")[fsid], E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Carbon")[fsid], E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Nitrogen")[fsid], E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Oxygen")[fsid], E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Neon")[fsid], E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Magnesium")[fsid], E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Silicon")[fsid], E.readArray("SUBFIND", sim, tag, "/Subhalo/Stars/SmoothedElementAbundance/Iron")[fsid]]) 
-	fofarray = np.array([fsid,groupnumber,CoP,subhalovel,r_200,tot_ang_mom, stellar_mass, stellar_abundances ])	
+	fofarray = np.array([fsid,groupnumber,CoP,subhalovel,r_200,tot_ang_mom, stellar_mass, stellar_abundances, m_200 ])	
 
-	mass_cut_groupnums = fofarray[1][np.where(((fofarray[6] > mass_cut[0]) & (fofarray[6] < mass_cut[1])))]
+	locs = np.where(((fofarray[8] > mass_cut[0]) & (fofarray[8] < mass_cut[1])))
+	mass_cut_groupnums = fofarray[1][locs]
+
 	print "Loading subgroup numbers..."
 	subgroupnum_type = np.array( [E.readArray("PARTDATA", sim, tag, "/PartType0/SubGroupNumber"), 
 				      E.readArray("PARTDATA", sim, tag, "/PartType1/SubGroupNumber"), 
@@ -189,6 +195,7 @@ def loadsnipparticles( groupnum, run=default_run,tag=default_tag,model=default_m
 
 	
 	fsid = np.array(E.readArray("SNIP_SUBFIND", sim, tag, "FOF/FirstSubhaloID"))[groupnum-1]
+
 	groupnumber = np.array(E.readArray("SNIP_SUBFIND" , sim, tag, "/Subhalo/GroupNumber"))[fsid]
 	CoP = np.array(E.readArray("SNIP_SUBFIND", sim, tag, "/Subhalo/CentreOfPotential"))[fsid]
 	subhalovel = np.array(E.readArray("SNIP_SUBFIND", sim, tag, "/Subhalo/Velocity"))[fsid]
@@ -267,6 +274,7 @@ def halo(partstack,fofdat,simattributes,groupnum, snip=False):
 	""" define a central halo using groupnum and see its jz/jc histogram and morphology """
 	print 'Isolating FoF and Aligning....'
 	#Isolate the desired Group
+<<<<<<< HEAD
 	
 	stack = partstack[(partstack[:,1] == groupnum) & (partstack[:,2] == 0)]
 	if snip==False:
@@ -324,7 +332,6 @@ def halo(partstack,fofdat,simattributes,groupnum, snip=False):
 	starjz_jc = (starj_z/starj_c)
 	kappa = (0.5*starmass*((starj_z/starr_xy)**2))/(0.5*starmass*(np.linalg.norm(starvel, axis=1)**2))
 	if snip == False:
-		print 'calculating abundance ratios...'
 		starmass = stack[:,9][stack[:,0] == 4]
 		stars_h = stack[:,10][stack[:,0] == 4]
 		stars_he =stack[:,11][stack[:,0] == 4]
@@ -368,8 +375,6 @@ def halo(partstack,fofdat,simattributes,groupnum, snip=False):
 		omgsi_h = np.array([str_omgsi_h - solar_omgsi_h for str_omgsi_h in stars_omgsi_h])
 		a_fe = omgsi_h - fe_h
 	#a_fe = np.array([str_a_fe - solar_a_fe for str_a_fe in stars_a_fe])
-	
-	print 'Calculating Global Properties...'
 	jz_jcdisky = float(len(starjz_jc[(starjz_jc < 1.2) & (starjz_jc > 0.7)]))
 	lenjz_jc = float(len(starjz_jc))
 	jz_jcdiskratio = jz_jcdisky/lenjz_jc
@@ -492,12 +497,12 @@ def expansion2age(simattributes, formexpfactors):
 	t_em = t_em[:,0]
 	t_em = (1/(simattributes[3]*100))*(3.086e19/3.1536e16)*t_em
 	age = t_em
-
 	return age
 
 def find_nearest(array,value):
 	idx = (np.abs(array-value)).argmin()
 	return idx, array[idx]
+
 
 def findnearestsnip(age, run=default_run,model=default_model,directory=default_dir):
 	snip_tags, snip_ages = extractsnipages(run=run, model=model, directory=directory)
@@ -520,9 +525,6 @@ def extractsnipages(run=default_run,model=default_model,directory=default_dir):
 		age = (1/(h*100))*(3.086e19/3.1536e16)*quad(t_lookback, a_0, 1)[0]
 		snip_age.append(age)
 	return snip_tags, snip_age
-	
-	
-
 
 def searchsnipforhalo(haloPIDs, simattributes, snip_tag):
 	run = simattributes[0]
@@ -634,6 +636,7 @@ def savehaloarrays(partarray, fofarray, simattributes, directory=work_dir, snip=
 		kappa = stars_grp.create_dataset('Kappa', data=stack[:,15])
 		f.close()
 		
+
 def correctwrap(rel_pos):
 	""" Correct the periodic wrap in EAGLE """
 	for i in range(0,len(rel_pos)):
@@ -682,6 +685,7 @@ class Snipshot(object):
 		 self.particlestack, self.fofstack, self.simattributes = loadsnipparticles(self.groupnum, run = self.run, tag = self.tag, model = self.model, directory = self.directory)
 
 class Halo(object):
+
 	def __init__(self, groupnumber, snip=False, stack=False):
 		self.snip = snip
 		self.stack = stack	
@@ -992,7 +996,6 @@ class Halo(object):
 			plt.show()
 	
 	def agescaleheight(self, rad_cut = [0.003,0.015], jzjc_cut=[0.8,1.2], save=False, returnarray=False):
-		
 		part = self.particles
 		if self.snip == False:
 			jzjc = part[:,12]
@@ -1054,13 +1057,9 @@ class Halo(object):
 
 	def save(self, directory=work_dir):
 		savehaloarrays(self.particles, self.fof, self.simattributes, directory=directory, snip=self.snip)
-	
-
 
 	
 
-	
-	
 	
 	
 	
